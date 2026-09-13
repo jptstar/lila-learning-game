@@ -27,8 +27,6 @@ export const DATA = [
  {l:"Z",lower:"z",spoken:"zède",word:"zèbre",emoji:"🦓",article:"un",phrase:"Z comme zèbre"}
 ];
 
-// Les formes après « de » sont écrites explicitement pour éviter les fautes
-// d'élision à l'écran comme à l'oral : « d'étoiles », et non « de étoiles ».
 export const COUNT_EMOJIS = [
  {emoji:"🍎",name:"pommes",quantity:"de pommes"},
  {emoji:"⭐",name:"étoiles",quantity:"d’étoiles"},
@@ -58,24 +56,18 @@ export function numberToFrench(value){
     return n===70?"soixante-dix":`soixante-${numberToFrench(n-60)}`;
   }
   if(n===80)return "quatre-vingts";
-  if(n<100){
-    const rest=n-80;
-    return `quatre-vingt-${numberToFrench(rest)}`;
-  }
+  if(n<100)return `quatre-vingt-${numberToFrench(n-80)}`;
   return String(n);
 }
 
-// Forme réservée à la synthèse vocale. On garde l'orthographe française
-// correcte à l'écran, mais on retire les traits d'union pour éviter que
-// certaines voix iOS/Safari prononcent mal des nombres comme « vingt-cinq ».
 export function numberToFrenchSpeech(value){
   return numberToFrench(value).replaceAll("-"," ").replace(/\s+/g," ").trim();
 }
 
 export const NUMBER_WORDS = Object.fromEntries(
-  Array.from({length:100},(_,i)=>[i+1,numberToFrench(i+1)])
+  Array.from({length:101},(_,i)=>[i,numberToFrench(i)])
 );
 
 export const NUMBER_SPEECH_WORDS = Object.fromEntries(
-  Array.from({length:100},(_,i)=>[i+1,numberToFrenchSpeech(i+1)])
+  Array.from({length:101},(_,i)=>[i,numberToFrenchSpeech(i)])
 );
