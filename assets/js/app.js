@@ -1,4 +1,4 @@
-import {DATA, COUNT_EMOJIS, NUMBER_WORDS} from "./data.js";
+import {DATA, COUNT_EMOJIS, NUMBER_WORDS, NUMBER_SPEECH_WORDS} from "./data.js";
 import {VoiceService} from "./voice.js";
 import {shuffle, rand} from "./utils.js";
 import {GAMES} from "../../games/manifest.js";
@@ -61,7 +61,7 @@ function clearStage(){
 function showReward(){
   els.reward.classList.add("show");$("#rewardText").textContent=`Tu as réussi ${state.correctSinceReward} réponses. Lila est fière de toi !`;state.correctSinceReward=0;
 }
-function numberWord(value){return NUMBER_WORDS[Number(value)]||String(value);}
+function numberWord(value){return NUMBER_SPEECH_WORDS[Number(value)]||NUMBER_WORDS[Number(value)]||String(value);}
 
 async function afterAnswer(ok,item,{selectedKey=null,correctKey=null,roundId=state.roundId}={}){
   state.questions++;
@@ -93,13 +93,10 @@ async function afterAnswer(ok,item,{selectedKey=null,correctKey=null,roundId=sta
   }
   if(item?.l)state.mistakeQueue.push(item);
 
-  const continueButton=addAction("🔊 Écoute Lila…",()=>{});
-  continueButton.disabled=true;continueButton.classList.add("waitButton");
-  await voice.speak(explanation);
-  if(roundId!==state.roundId)return;
-  continueButton.disabled=false;continueButton.classList.remove("waitButton");
-  continueButton.textContent="J’ai compris, continuer ➜";
-  continueButton.onclick=()=>{if(roundId===state.roundId)nextRound();};
+  // La correction reste affichée, mais l'enfant peut continuer immédiatement.
+  // S'il appuie sur Continuer pendant que Lila parle, nextRound() coupe proprement la voix.
+  addAction("J’ai compris, continuer ➜",()=>{if(roundId===state.roundId)nextRound();});
+  voice.speak(explanation).catch(e=>console.warn("Lecture de la correction interrompue",e));
 }
 
 function pickLearningItem(){
@@ -140,7 +137,7 @@ function showIllustration(item,showLabel=true){
 function addAction(label,onClick){const b=document.createElement("button");b.className="nextBig";b.innerHTML=label;b.onclick=onClick;els.actions.appendChild(b);return b;}
 
 const api={
-  state,DATA,COUNT_EMOJIS,NUMBER_WORDS,rand,shuffle,artFor,pickLearningItem,
+  state,DATA,COUNT_EMOJIS,NUMBER_WORDS,NUMBER_SPEECH_WORDS,rand,shuffle,artFor,pickLearningItem,
   setQuestion:t=>els.question.textContent=t,setSubQuestion:t=>els.subQuestion.textContent=t,
   setBubble:t=>els.bubble.textContent=t,setVisual:html=>els.visual.innerHTML=html,
   setCurrent:v=>state.current=v,getCurrent:()=>state.current,
