@@ -1,0 +1,12 @@
+services:
+  lila-ai-relay:
+    build: .
+    container_name: lila-ai-relay
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY}"
+      LILA_RELAY_TOKEN: "${LILA_RELAY_TOKEN}"
+      ALLOWED_ORIGIN: "${ALLOWED_ORIGIN:-https://jptstar.github.io}"
