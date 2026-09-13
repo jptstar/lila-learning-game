@@ -10,24 +10,38 @@ const els={
   feedback:$("#feedback"),actions:$("#discoverActions"),reward:$("#reward"),modeGrid:$("#modeGrid"),stage:$("#stage")
 };
 
-const savedMin=Number(localStorage.getItem("lilaMinNumber"));
-const savedMax=Number(localStorage.getItem("lilaMaxNumber"));
-let initialMin=Number.isFinite(savedMin)&&savedMin>=1&&savedMin<=100?savedMin:1;
-let initialMax=Number.isFinite(savedMax)&&savedMax>=1&&savedMax<=100?savedMax:20;
-if(initialMax-initialMin<2){
-  if(initialMin<=98)initialMax=initialMin+2;
-  else{initialMax=100;initialMin=98;}
+function normalizeMin(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)||n<=1)return 1;
+  return Math.max(10,Math.min(90,Math.floor(n/10)*10));
+}
+function normalizeMax(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return 20;
+  if(n<=10)return 10;
+  return Math.max(20,Math.min(100,Math.ceil(n/10)*10));
+}
+
+let initialMin=normalizeMin(localStorage.getItem("lilaMinNumber"));
+let initialMax=normalizeMax(localStorage.getItem("lilaMaxNumber"));
+if(initialMax<=initialMin){
+  initialMax=Math.min(100,initialMin+10);
+  if(initialMax<=initialMin){initialMin=90;initialMax=100;}
 }
 
 const savedVoiceProvider=localStorage.getItem("lilaVoiceProvider");
 const initialVoiceProvider=savedVoiceProvider==="piper"?"piper":"browser";
 const initialPiperEndpoint=localStorage.getItem("lilaPiperEndpoint")||"";
 const initialPiperToken=localStorage.getItem("lilaPiperToken")||"";
+const allowedLlmProviders=new Set(["none","chatgpt","gemini"]);
+const savedLlmProvider=localStorage.getItem("lilaLlmProvider")||"none";
+const initialLlmProvider=allowedLlmProviders.has(savedLlmProvider)?savedLlmProvider:"none";
 
 const voice=new VoiceService();
 const state={
-  gameId:null,score:0,streak:0,correctSinceReward:0,questions:0,locked:false,current:null,
+  gameId:null,score:0,streak:0,questions:0,seriesAnswered:0,seriesCorrect:0,locked:false,current:null,
   sound:true,autoSpeak:true,showLower:true,minNumber:initialMin,maxNumber:initialMax,
+  llmProvider:initialLlmProvider,
   voiceProvider:initialVoiceProvider,piperEndpoint:initialPiperEndpoint,piperToken:initialPiperToken,
   mistakeQueue:[],discoverIndex:0,correctChoice:null,lastCorrectPositions:{},roundHint:null,smartSubgame:null,
   roundId:0,advanceTimer:null,errorHold:false
@@ -52,29 +66,40 @@ function burst(){
 function clearAdvanceTimer(){if(state.advanceTimer){clearTimeout(state.advanceTimer);state.advanceTimer=null;}}
 function updateStats(){
   els.score.textContent=state.score;els.streak.textContent=state.streak;
-  els.progress.style.width=((state.questions%10)*10)+"%";
+  els.progress.style.width=(Math.min(10,state.seriesAnswered)*10)+"%";
+}
+function resetSeries(){
+  state.seriesAnswered=0;state.seriesCorrect=0;updateStats();
 }
 function clearStage(){
   clearAdvanceTimer();state.locked=false;state.errorHold=false;state.correctChoice=null;state.roundHint=null;
   els.feedback.textContent="";els.visual.innerHTML="";els.choices.innerHTML="";els.actions.innerHTML="";els.subQuestion.textContent="";
 }
 function showReward(){
-  els.reward.classList.add("show");$("#rewardText").textContent=`Tu as réussi ${state.correctSinceReward} réponses. Lila est fière de toi !`;state.correctSinceReward=0;
+  clearAdvanceTimer();
+  els.reward.classList.add("show");
+  const label=state.seriesCorrect===1?"bonne réponse":"bonnes réponses";
+  $("#rewardText").textContent=`Tu as terminé les 10 activités avec ${state.seriesCorrect} ${label}.`;
+  voice.speak("Bravo ! Quelle belle série !",{force:true}).catch(()=>{});
 }
 function numberWord(value){return NUMBER_SPEECH_WORDS[Number(value)]||NUMBER_WORDS[Number(value)]||String(value);}
 
 async function afterAnswer(ok,item,{selectedKey=null,correctKey=null,roundId=state.roundId}={}){
   state.questions++;
+  state.seriesAnswered=Math.min(10,state.seriesAnswered+1);
   clearAdvanceTimer();
 
   if(ok){
-    state.score++;state.streak++;state.correctSinceReward++;
-    els.feedback.textContent=state.streak>=3?"🌟 Bravo, quelle belle série !":"✅ Bravo !";
-    els.bubble.textContent=state.streak>=3?"Quelle belle série !":"Oui, c’est exactement ça !";burst();updateStats();
-    await voice.speak(state.streak>=3?"Bravo ! Quelle belle série !":"Bravo !");
+    state.score++;state.streak++;state.seriesCorrect++;
+    els.feedback.textContent="✅ Bravo !";
+    els.bubble.textContent="Oui, c’est exactement ça !";burst();updateStats();
+    await voice.speak("Bravo !");
     if(roundId!==state.roundId)return;
-    if(state.correctSinceReward>=5){state.advanceTimer=setTimeout(()=>{if(roundId===state.roundId)showReward();},350);}
-    else{state.advanceTimer=setTimeout(()=>{if(roundId===state.roundId)nextRound();},350);}
+    if(state.seriesAnswered>=10){
+      state.advanceTimer=setTimeout(()=>{if(roundId===state.roundId)showReward();},350);
+    }else{
+      state.advanceTimer=setTimeout(()=>{if(roundId===state.roundId)nextRound();},350);
+    }
     return;
   }
 
@@ -93,9 +118,11 @@ async function afterAnswer(ok,item,{selectedKey=null,correctKey=null,roundId=sta
   }
   if(item?.l)state.mistakeQueue.push(item);
 
-  // La correction reste affichée, mais l'enfant peut continuer immédiatement.
-  // S'il appuie sur Continuer pendant que Lila parle, nextRound() coupe proprement la voix.
-  addAction("J’ai compris, continuer ➜",()=>{if(roundId===state.roundId)nextRound();});
+  const continueAction=()=>{
+    if(roundId!==state.roundId)return;
+    if(state.seriesAnswered>=10)showReward();else nextRound();
+  };
+  addAction("J’ai compris, continuer ➜",continueAction);
   voice.speak(explanation).catch(e=>console.warn("Lecture de la correction interrompue",e));
 }
 
@@ -165,11 +192,12 @@ function nextRound(){
   const game=currentGame();if(!game)return;game.play(api);
 }
 function openGame(id){
-  clearAdvanceTimer();voice.cancel();state.gameId=id;state.questions=0;els.progress.style.width="0%";
+  clearAdvanceTimer();voice.cancel();state.gameId=id;state.questions=0;resetSeries();
   $("#home").classList.remove("active");$("#gameScreen").classList.add("active");nextRound();
 }
 function goHome(){
-  clearAdvanceTimer();state.roundId++;voice.cancel();$("#gameScreen").classList.remove("active");$("#home").classList.add("active");els.progress.style.width="0%";
+  clearAdvanceTimer();state.roundId++;voice.cancel();resetSeries();
+  $("#gameScreen").classList.remove("active");$("#home").classList.add("active");
 }
 function showHint(){
   if(state.errorHold)return;
@@ -181,7 +209,7 @@ function showHint(){
 $("#homeBtn").onclick=goHome;
 $("#repeatBtn").onclick=()=>voice.repeat();
 $("#hintBtn").onclick=showHint;
-$("#rewardContinue").onclick=()=>{els.reward.classList.remove("show");nextRound()};
+$("#rewardContinue").onclick=()=>{voice.cancel();els.reward.classList.remove("show");resetSeries();nextRound();};
 $("#soundBtn").onclick=()=>{state.sound=!state.sound;voice.configure({sound:state.sound});$("#soundBtn").textContent=state.sound?"🔊":"🔇";if(!state.sound)voice.cancel();};
 $("#settingsBtn").onclick=()=>$("#settings").classList.add("show");
 $("#closeSettings").onclick=()=>$("#settings").classList.remove("show");
@@ -192,19 +220,18 @@ toggle("#autoSpeakToggle","autoSpeak",true,false,v=>voice.configure({autoSpeak:v
 toggle("#lowerToggle","showLower",true,false);
 
 const minNumberSelect=$("#minNumberSelect"),maxNumberSelect=$("#maxNumberSelect");
-for(let n=1;n<=100;n++){
-  const a=document.createElement("option");a.value=String(n);a.textContent=String(n);minNumberSelect.appendChild(a);
-  const b=document.createElement("option");b.value=String(n);b.textContent=String(n);maxNumberSelect.appendChild(b);
-}
+[1,10,20,30,40,50,60,70,80,90].forEach(n=>{
+  const option=document.createElement("option");option.value=String(n);option.textContent=String(n);minNumberSelect.appendChild(option);
+});
+[10,20,30,40,50,60,70,80,90,100].forEach(n=>{
+  const option=document.createElement("option");option.value=String(n);option.textContent=String(n);maxNumberSelect.appendChild(option);
+});
 function syncRange(changed){
-  let min=Math.max(1,Math.min(100,Number(minNumberSelect.value)||1));
-  let max=Math.max(1,Math.min(100,Number(maxNumberSelect.value)||20));
-  if(max-min<2){
-    if(changed==="min"){
-      if(min<=98)max=min+2;else{min=98;max=100;}
-    }else{
-      if(max>=3)min=max-2;else{min=1;max=3;}
-    }
+  let min=normalizeMin(minNumberSelect.value);
+  let max=normalizeMax(maxNumberSelect.value);
+  if(max<=min){
+    if(changed==="min")max=Math.min(100,min+10);
+    else min=max===10?1:Math.max(10,max-10);
   }
   state.minNumber=min;state.maxNumber=max;
   minNumberSelect.value=String(min);maxNumberSelect.value=String(max);
@@ -212,6 +239,25 @@ function syncRange(changed){
 }
 minNumberSelect.value=String(state.minNumber);maxNumberSelect.value=String(state.maxNumber);
 minNumberSelect.onchange=()=>syncRange("min");maxNumberSelect.onchange=()=>syncRange("max");
+syncRange("max");
+
+const llmProviderSelect=$("#llmProviderSelect");
+const llmProviderInfo=$("#llmProviderInfo");
+function refreshLlmInfo(){
+  if(state.llmProvider==="chatgpt"){
+    llmProviderInfo.textContent="ChatGPT sélectionné. Le choix est mémorisé ; la connexion API sera faite via un relais sécurisé afin de ne pas exposer de clé dans le navigateur.";
+  }else if(state.llmProvider==="gemini"){
+    llmProviderInfo.textContent="Gemini sélectionné. Le choix est mémorisé ; la connexion API sera faite via un relais sécurisé afin de ne pas exposer de clé dans le navigateur.";
+  }else{
+    llmProviderInfo.textContent="Aucun LLM : les jeux actuels fonctionnent sans IA distante.";
+  }
+}
+llmProviderSelect.value=state.llmProvider;
+llmProviderSelect.onchange=()=>{
+  state.llmProvider=allowedLlmProviders.has(llmProviderSelect.value)?llmProviderSelect.value:"none";
+  localStorage.setItem("lilaLlmProvider",state.llmProvider);refreshLlmInfo();
+};
+refreshLlmInfo();
 
 const voiceProviderSelect=$("#voiceProviderSelect");
 const piperSettings=$("#piperSettings");
