@@ -10,14 +10,21 @@ const els={
   feedback:$("#feedback"),actions:$("#discoverActions"),reward:$("#reward"),modeGrid:$("#modeGrid"),stage:$("#stage")
 };
 
+const savedMin=Number(localStorage.getItem("lilaMinNumber"));
 const savedMax=Number(localStorage.getItem("lilaMaxNumber"));
-const initialMax=Number.isFinite(savedMax)&&savedMax>=3&&savedMax<=20?savedMax:20;
+let initialMin=Number.isFinite(savedMin)&&savedMin>=1&&savedMin<=100?savedMin:1;
+let initialMax=Number.isFinite(savedMax)&&savedMax>=1&&savedMax<=100?savedMax:20;
+if(initialMax-initialMin<2){
+  if(initialMin<=98)initialMax=initialMin+2;
+  else{initialMax=100;initialMin=98;}
+}
 
 const voice=new VoiceService();
 const state={
   gameId:null,score:0,streak:0,correctSinceReward:0,questions:0,locked:false,current:null,
-  sound:true,autoSpeak:true,showLower:true,maxNumber:initialMax,mistakeQueue:[],discoverIndex:0,
-  correctChoice:null,lastCorrectPositions:{},roundHint:null,smartSubgame:null
+  sound:true,autoSpeak:true,showLower:true,minNumber:initialMin,maxNumber:initialMax,
+  mistakeQueue:[],discoverIndex:0,correctChoice:null,lastCorrectPositions:{},roundHint:null,smartSubgame:null,
+  roundId:0,advanceTimer:null,errorHold:false
 };
 
 function artFor(item){
@@ -36,46 +43,57 @@ function burst(){
   }
 }
 
+function clearAdvanceTimer(){if(state.advanceTimer){clearTimeout(state.advanceTimer);state.advanceTimer=null;}}
 function updateStats(){
   els.score.textContent=state.score;els.streak.textContent=state.streak;
   els.progress.style.width=((state.questions%10)*10)+"%";
 }
 function clearStage(){
-  state.locked=false;state.correctChoice=null;state.roundHint=null;els.feedback.textContent="";els.visual.innerHTML="";els.choices.innerHTML="";els.actions.innerHTML="";els.subQuestion.textContent="";
+  clearAdvanceTimer();state.locked=false;state.errorHold=false;state.correctChoice=null;state.roundHint=null;
+  els.feedback.textContent="";els.visual.innerHTML="";els.choices.innerHTML="";els.actions.innerHTML="";els.subQuestion.textContent="";
 }
 function showReward(){
   els.reward.classList.add("show");$("#rewardText").textContent=`Tu as réussi ${state.correctSinceReward} réponses. Lila est fière de toi !`;state.correctSinceReward=0;
 }
 function numberWord(value){return NUMBER_WORDS[Number(value)]||String(value);}
-function afterAnswer(ok,item,{selectedKey=null,correctKey=null}={}){
+
+async function afterAnswer(ok,item,{selectedKey=null,correctKey=null,roundId=state.roundId}={}){
   state.questions++;
+  clearAdvanceTimer();
+
   if(ok){
     state.score++;state.streak++;state.correctSinceReward++;
     els.feedback.textContent=state.streak>=3?"🌟 Bravo, quelle belle série !":"✅ Bravo !";
-    els.bubble.textContent=state.streak>=3?"Tu deviens très fort !":"Oui, c’est exactement ça !";burst();
-    voice.speak(state.streak>=3?"Bravo ! Quelle belle série !":"Bravo !");
-    updateStats();
-    if(state.correctSinceReward>=5)setTimeout(showReward,700);else setTimeout(nextRound,1150);
+    els.bubble.textContent=state.streak>=3?"Tu deviens très fort !":"Oui, c’est exactement ça !";burst();updateStats();
+    await voice.speak(state.streak>=3?"Bravo ! Quelle belle série !":"Bravo !");
+    if(roundId!==state.roundId)return;
+    if(state.correctSinceReward>=5){state.advanceTimer=setTimeout(()=>{if(roundId===state.roundId)showReward();},350);}
+    else{state.advanceTimer=setTimeout(()=>{if(roundId===state.roundId)nextRound();},350);}
     return;
   }
 
-  state.streak=0;
+  state.streak=0;state.errorHold=true;updateStats();
   const isNumberGame=item?.type==="count"||item?.type==="recognize-number";
+  let explanation="";
+
   if(isNumberGame&&selectedKey!==null&&correctKey!==null){
-    els.feedback.innerHTML=`<span class="feedbackWrong">❌ Tu as choisi <strong>${selectedKey}</strong>.</span> <span class="feedbackCorrect">✅ Le bon nombre est <strong>${correctKey}</strong>.</span>`;
-    els.bubble.textContent=`Tu t’es trompé, ce n’est pas grave. Tu as choisi le nombre ${selectedKey}. Le nombre ${correctKey} est ici.`;
-    voice.speak(`Tu t'es trompé, ce n'est pas grave. Tu as choisi le nombre ${numberWord(selectedKey)}. Le bon nombre, ${numberWord(correctKey)}, est ici.`);
+    els.feedback.innerHTML=`<span class="feedbackWrong">❌ Tu as choisi <strong>${selectedKey}</strong>.</span> <span class="feedbackCorrect">✅ La bonne réponse est <strong>${correctKey}</strong>.</span>`;
+    els.bubble.textContent=`Tu as choisi ${selectedKey}. Ce n’est pas grave. Regarde : ${selectedKey} est en rouge et ${correctKey} est en vert.`;
+    explanation=`Tu t'es trompé, ce n'est pas grave. Tu as choisi le nombre ${selectedKey}, ${numberWord(selectedKey)}. Ce n'est pas le bon nombre. La bonne réponse est ${correctKey}, ${numberWord(correctKey)}. Regarde bien : ${selectedKey} est en rouge et ${correctKey} est en vert. Prends ton temps.`;
   }else{
-    els.feedback.innerHTML=`<span class="feedbackWrong">❌ Ce n’est pas cette réponse.</span> <span class="feedbackCorrect">✅ Regarde la bonne réponse en vert.</span>`;
-    els.bubble.textContent="Tu t’es trompé, ce n’est pas grave. Regarde la bonne réponse en vert.";
-    voice.speak("Tu t'es trompé, ce n'est pas grave. Regarde la bonne réponse en vert.");
+    els.feedback.innerHTML=`<span class="feedbackWrong">❌ Ce n’est pas cette réponse.</span> <span class="feedbackCorrect">✅ La bonne réponse est en vert.</span>`;
+    els.bubble.textContent="Tu t’es trompé, ce n’est pas grave. La réponse choisie est en rouge et la bonne réponse est en vert.";
+    explanation="Tu t'es trompé, ce n'est pas grave. Regarde bien. La réponse que tu as choisie est en rouge, et la bonne réponse est en vert. Prends ton temps pour les comparer.";
   }
   if(item?.l)state.mistakeQueue.push(item);
-  updateStats();
 
-  // Après une erreur, on ne change jamais de question automatiquement :
-  // l'enfant garde le temps de regarder le rouge et le vert et d'écouter Lila.
-  addAction("J’ai compris, continuer ➜",nextRound);
+  const continueButton=addAction("🔊 Écoute Lila…",()=>{});
+  continueButton.disabled=true;continueButton.classList.add("waitButton");
+  await voice.speak(explanation);
+  if(roundId!==state.roundId)return;
+  continueButton.disabled=false;continueButton.classList.remove("waitButton");
+  continueButton.textContent="J’ai compris, continuer ➜";
+  continueButton.onclick=()=>{if(roundId===state.roundId)nextRound();};
 }
 
 function pickLearningItem(){
@@ -100,10 +118,12 @@ function renderChoices(options,correctKey,{item=null,slotKey=state.gameId}={}){
     const b=document.createElement("button");b.className=`choice ${opt.className||""}`;b.innerHTML=opt.html;b.dataset.value=String(opt.key);
     if(String(opt.key)===String(correctKey))state.correctChoice=b;
     b.onclick=()=>{
-      if(state.locked)return;state.locked=true;
+      if(state.locked)return;
+      state.locked=true;
+      const answerRound=state.roundId;
       const ok=String(opt.key)===String(correctKey);b.classList.add(ok?"good":"bad");
       if(state.correctChoice)state.correctChoice.classList.add("good");
-      afterAnswer(ok,item,{selectedKey:opt.key,correctKey});
+      afterAnswer(ok,item,{selectedKey:opt.key,correctKey,roundId:answerRound});
     };
     els.choices.appendChild(b);
   });
@@ -138,16 +158,18 @@ function renderHome(){
 }
 function currentGame(){return GAMES.find(g=>g.id===state.gameId);}
 function nextRound(){
-  els.reward.classList.remove("show");clearStage();
-  const game=currentGame();if(!game)return;
-  game.play(api);
+  clearAdvanceTimer();voice.cancel();state.roundId++;els.reward.classList.remove("show");clearStage();
+  const game=currentGame();if(!game)return;game.play(api);
 }
 function openGame(id){
-  state.gameId=id;state.questions=0;els.progress.style.width="0%";
+  clearAdvanceTimer();voice.cancel();state.gameId=id;state.questions=0;els.progress.style.width="0%";
   $("#home").classList.remove("active");$("#gameScreen").classList.add("active");nextRound();
 }
-function goHome(){voice.cancel();$("#gameScreen").classList.remove("active");$("#home").classList.add("active");els.progress.style.width="0%";}
+function goHome(){
+  clearAdvanceTimer();state.roundId++;voice.cancel();$("#gameScreen").classList.remove("active");$("#home").classList.add("active");els.progress.style.width="0%";
+}
 function showHint(){
+  if(state.errorHold)return;
   if(typeof state.roundHint==="function")return state.roundHint(api);
   const game=currentGame();if(typeof game?.hint==="function")return game.hint(api);
   api.highlightCorrect();api.setBubble("Je fais clignoter la bonne réponse. Regarde bien !");
@@ -166,12 +188,27 @@ function toggle(id,key,onValue,offValue,onChange){
 toggle("#autoSpeakToggle","autoSpeak",true,false,v=>voice.configure({autoSpeak:v}));
 toggle("#lowerToggle","showLower",true,false);
 
-const maxNumberSelect=$("#maxNumberSelect");
-maxNumberSelect.value=String(state.maxNumber);
-maxNumberSelect.onchange=()=>{
-  state.maxNumber=Math.max(3,Math.min(20,Number(maxNumberSelect.value)||20));
-  localStorage.setItem("lilaMaxNumber",String(state.maxNumber));
-};
+const minNumberSelect=$("#minNumberSelect"),maxNumberSelect=$("#maxNumberSelect");
+for(let n=1;n<=100;n++){
+  const a=document.createElement("option");a.value=String(n);a.textContent=String(n);minNumberSelect.appendChild(a);
+  const b=document.createElement("option");b.value=String(n);b.textContent=String(n);maxNumberSelect.appendChild(b);
+}
+function syncRange(changed){
+  let min=Math.max(1,Math.min(100,Number(minNumberSelect.value)||1));
+  let max=Math.max(1,Math.min(100,Number(maxNumberSelect.value)||20));
+  if(max-min<2){
+    if(changed==="min"){
+      if(min<=98)max=min+2;else{min=98;max=100;}
+    }else{
+      if(max>=3)min=max-2;else{min=1;max=3;}
+    }
+  }
+  state.minNumber=min;state.maxNumber=max;
+  minNumberSelect.value=String(min);maxNumberSelect.value=String(max);
+  localStorage.setItem("lilaMinNumber",String(min));localStorage.setItem("lilaMaxNumber",String(max));
+}
+minNumberSelect.value=String(state.minNumber);maxNumberSelect.value=String(state.maxNumber);
+minNumberSelect.onchange=()=>syncRange("min");maxNumberSelect.onchange=()=>syncRange("max");
 
 voice.configure({sound:state.sound,autoSpeak:state.autoSpeak});
 renderHome();updateStats();
