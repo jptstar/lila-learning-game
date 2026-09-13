@@ -18,8 +18,8 @@ export const tracingGame={
     const letter=api.pickUnique(LETTERS,"trace-letter",x=>x);
     api.setCurrent({type:"trace",letter});
     api.setQuestion(`Écris la lettre ${letter}.`);
-    api.setSubQuestion("Choisis le style puis repasse doucement sur la lettre.");
-    api.setBubble("Suis les traits et les petites flèches sans trop déborder.");
+    api.setSubQuestion("Repasse sur la lettre puis valide ton tracé.");
+    api.setBubble("Suis les traits et les petites flèches. Tu peux déborder un petit peu.");
     api.say(`Repasse la lettre ${letter} avec ton doigt.`);
 
     api.setVisual(`<div class="tracePanel">
@@ -30,14 +30,15 @@ export const tracingGame={
       <div class="traceCanvasWrap"><canvas id="traceCanvas" class="traceCanvas" width="360" height="360"></canvas></div>
       <div class="traceHint">Commence près du repère ① puis suis les flèches.</div>
       <div id="traceStatus" class="traceStatus"></div>
-      <div class="traceActions"><button id="traceClear">🧽 Effacer</button><button id="traceCheck" class="primary">✓ Vérifier</button><button id="traceNext">Lettre suivante ➜</button></div>
+      <div class="traceActions traceActionsTwo"><button id="traceClear">🧽 Effacer</button><button id="traceCheck" class="primary">✓ Valider</button></div>
     </div>`);
 
     const canvas=document.querySelector("#traceCanvas");
     const ctx=canvas.getContext("2d");
     const mask=document.createElement("canvas");mask.width=360;mask.height=360;const mctx=mask.getContext("2d",{willReadFrequently:true});
     const caseSelect=document.querySelector("#traceCase"),styleSelect=document.querySelector("#traceStyle"),status=document.querySelector("#traceStatus");
-    let drawing=false,last=null,totalPoints=0,outsidePoints=0,pathLength=0;
+    const clearBtn=document.querySelector("#traceClear"),checkBtn=document.querySelector("#traceCheck");
+    let drawing=false,last=null,totalPoints=0,outsidePoints=0,pathLength=0,checking=false;
 
     function currentGlyph(){return caseSelect.value==="lower"?letter.toLowerCase():letter;}
     function drawTemplate(){
@@ -46,38 +47,47 @@ export const tracingGame={
       const size=style==="cursive"?235:245;
       for(const c of [ctx,mctx]){
         c.save();c.font=`${size}px ${font}`;c.textAlign="center";c.textBaseline="middle";
-        if(c===ctx){c.fillStyle="#e8eef4";c.strokeStyle="#cbd9e5";c.lineWidth=3;}else{c.fillStyle="#000";c.strokeStyle="#000";c.lineWidth=22;}
+        if(c===ctx){c.fillStyle="#e8eef4";c.strokeStyle="#cbd9e5";c.lineWidth=3;}else{c.fillStyle="#000";c.strokeStyle="#000";c.lineWidth=24;}
         c.fillText(glyph,180,190);c.strokeText(glyph,180,190);c.restore();
       }
       ctx.save();ctx.font="700 17px sans-serif";ctx.fillStyle="rgba(61,94,124,.55)";
       guideMarks(letter,style).forEach(mark=>ctx.fillText(mark.t,mark.x,mark.y));ctx.restore();
-      totalPoints=0;outsidePoints=0;pathLength=0;last=null;status.textContent="";status.className="traceStatus";
+      totalPoints=0;outsidePoints=0;pathLength=0;last=null;checking=false;
+      status.textContent="";status.className="traceStatus";checkBtn.disabled=false;clearBtn.disabled=false;
     }
 
     function pos(event){const r=canvas.getBoundingClientRect();return {x:(event.clientX-r.left)*360/r.width,y:(event.clientY-r.top)*360/r.height};}
     function inside(x,y){
       const px=Math.max(0,Math.min(359,Math.round(x))),py=Math.max(0,Math.min(359,Math.round(y)));
-      const data=mctx.getImageData(Math.max(0,px-5),Math.max(0,py-5),Math.min(11,360-Math.max(0,px-5)),Math.min(11,360-Math.max(0,py-5))).data;
+      const radius=12,x0=Math.max(0,px-radius),y0=Math.max(0,py-radius);
+      const data=mctx.getImageData(x0,y0,Math.min(radius*2+1,360-x0),Math.min(radius*2+1,360-y0)).data;
       for(let i=3;i<data.length;i+=4)if(data[i]>20)return true;
       return false;
     }
-    function begin(event){drawing=true;canvas.setPointerCapture?.(event.pointerId);last=pos(event);event.preventDefault();}
+    function begin(event){if(checking)return;drawing=true;canvas.setPointerCapture?.(event.pointerId);last=pos(event);event.preventDefault();}
     function move(event){
-      if(!drawing)return;const p=pos(event);event.preventDefault();
-      ctx.save();ctx.strokeStyle="#6c63ff";ctx.lineWidth=17;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();
+      if(!drawing||checking)return;const p=pos(event);event.preventDefault();
+      ctx.save();ctx.strokeStyle="#6c63ff";ctx.lineWidth=19;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();
       const dx=p.x-last.x,dy=p.y-last.y;pathLength+=Math.hypot(dx,dy);totalPoints++;if(!inside(p.x,p.y))outsidePoints++;last=p;
     }
     function end(){drawing=false;last=null;}
 
     canvas.addEventListener("pointerdown",begin);canvas.addEventListener("pointermove",move);canvas.addEventListener("pointerup",end);canvas.addEventListener("pointercancel",end);
     caseSelect.addEventListener("change",drawTemplate);styleSelect.addEventListener("change",drawTemplate);
-    document.querySelector("#traceClear").onclick=drawTemplate;
-    document.querySelector("#traceNext").onclick=()=>api.next();
-    document.querySelector("#traceCheck").onclick=()=>{
+    clearBtn.onclick=drawTemplate;
+    checkBtn.onclick=async()=>{
+      if(checking)return;
       const outsideRatio=totalPoints?outsidePoints/totalPoints:1;
-      const ok=totalPoints>=18&&pathLength>=180&&outsideRatio<=.30;
-      if(ok){status.textContent="✅ Très bien, ton tracé suit la lettre !";status.className="traceStatus ok";api.say("Très bien ! Ton tracé suit la lettre.",true);}
-      else{status.textContent="↩️ Essaie encore en restant davantage sur le modèle.";status.className="traceStatus error";api.say("Essaie encore doucement en restant sur la lettre.",true);}
+      const ok=totalPoints>=12&&pathLength>=125&&outsideRatio<=.45;
+      if(!ok){
+        status.textContent="↩️ Essaie encore doucement en suivant la lettre.";status.className="traceStatus error";
+        await api.say("Essaie encore doucement en suivant la lettre. Tu peux déborder un petit peu.",true);
+        return;
+      }
+      checking=true;checkBtn.disabled=true;clearBtn.disabled=true;
+      status.textContent="✅ Très bien !";status.className="traceStatus ok";
+      try{await api.say("Très bien ! On passe à la lettre suivante.",true);}catch{}
+      api.next();
     };
     api.setHint(()=>api.say("Commence au repère numéro un, puis suis les flèches et le trait gris.",true));
     drawTemplate();
