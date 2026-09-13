@@ -10,7 +10,7 @@ export const shapesGame={
     api.setQuestion(`Trouve ${namedShape}.`);
     api.setSubQuestion("Choisis la bonne forme.");
     api.setVisual(`<div class="shapeStage"><div class="shapeTarget" style="font-size:76px">👀</div></div>`);
-    const opts=[target,...wrong].map(x=>({key:x.id,label:x.name,speech:x.name,html:shapeSvg(x,{size:92})}));
+    const opts=[target,...wrong].map(x=>({key:x.id,label:x.name,speech:shapeWithArticle(x),html:shapeSvg(x,{size:92})}));
     api.renderChoices(opts,target.id,{item:current,slotKey:"shapes"});
     api.setBubble(`Je cherche ${namedShape}.`);api.say(`Trouve ${namedShape}.`);
     api.setHint(()=>{api.highlightCorrect();api.say(`La bonne forme est ${namedShape}.`,true);});
