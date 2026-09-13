@@ -1,4 +1,4 @@
-const CACHE="lila-v7";
+const CACHE="lila-v8";
 const FILES=[
   "./","./index.html","./manifest.webmanifest","./assets/css/app.css","./assets/css/mobile-fit.css",
   "./assets/js/app.js","./assets/js/data.js","./assets/js/utils.js","./assets/js/voice.js",
