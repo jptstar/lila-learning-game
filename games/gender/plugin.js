@@ -1,4 +1,4 @@
-function genderOf(item){return item.article==="une"?"f":item.article==="un"||item.article==="le"?"m":null;}
+function genderOf(item){return item.article==="une"?"f":item.article==="un"?"m":null;}
 function startsWithVowel(word){return /^[aeiouyàâäéèêëîïôöùûüœ]/i.test(word);}
 
 export const genderGame={
