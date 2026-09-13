@@ -1,11 +1,27 @@
+function orderedCatalog(items){
+  const letters=[...new Set(items.map(x=>x.l))];
+  const groups=Object.fromEntries(letters.map(l=>[l,items.filter(x=>x.l===l)]));
+  const result=[];
+  for(let row=0;;row++){
+    let added=false;
+    for(const letter of letters){
+      const item=groups[letter][row];
+      if(item){result.push(item);added=true;}
+    }
+    if(!added)break;
+  }
+  return result;
+}
+
 export const discoverGame={
   id:"discover",icon:"📖",title:"Découvre",description:"Découvre les lettres avec tout le catalogue d’images.",
   play(api){
     let item;
     if(api.state.discoverMode==="random"){
-      item=api.pickLearningItem({slot:"discover-random"});
+      item=api.pickLearningItem({slot:"discover-random",avoidLetter:true});
     }else{
-      item=api.LETTER_CATALOG[api.state.discoverIndex%api.LETTER_CATALOG.length];
+      const ordered=orderedCatalog(api.LETTER_CATALOG);
+      item=ordered[api.state.discoverIndex%ordered.length];
     }
     api.setCurrent(item);
     api.setQuestion(`Découvre la lettre ${item.l}`);api.setSubQuestion("Regarde, écoute puis répète.");
