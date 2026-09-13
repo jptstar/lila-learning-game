@@ -65,6 +65,17 @@ export function numberToFrench(value){
   return String(n);
 }
 
+// Forme réservée à la synthèse vocale. On garde l'orthographe française
+// correcte à l'écran, mais on retire les traits d'union pour éviter que
+// certaines voix iOS/Safari prononcent mal des nombres comme « vingt-cinq ».
+export function numberToFrenchSpeech(value){
+  return numberToFrench(value).replaceAll("-"," ").replace(/\s+/g," ").trim();
+}
+
 export const NUMBER_WORDS = Object.fromEntries(
   Array.from({length:100},(_,i)=>[i+1,numberToFrench(i+1)])
+);
+
+export const NUMBER_SPEECH_WORDS = Object.fromEntries(
+  Array.from({length:100},(_,i)=>[i+1,numberToFrenchSpeech(i+1)])
 );
