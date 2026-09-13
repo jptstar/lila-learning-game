@@ -17,7 +17,7 @@ export class VoiceService{
   configure({sound,autoSpeak,provider,piperEndpoint,piperToken,piperVoice,piperSpeaker,piperLengthScale}={}){
     if(typeof sound==="boolean")this.sound=sound;
     if(typeof autoSpeak==="boolean")this.autoSpeak=autoSpeak;
-    if(provider==="browser"||provider==="piper")this.provider=provider;
+    if(["browser","piper","openai","gemini"].includes(provider))this.provider=provider;
     if(typeof piperEndpoint==="string")this.piperEndpoint=piperEndpoint.trim();
     if(typeof piperToken==="string")this.piperToken=piperToken.trim();
     if(typeof piperVoice==="string")this.piperVoice=piperVoice.trim();
@@ -30,6 +30,17 @@ export class VoiceService{
     if(!this.sound||(!force&&!this.autoSpeak))return false;
     this.cancel();
 
+    if(["openai","gemini"].includes(this.provider)){
+      try{
+        if(!window.LilaCloud?.synthesize)throw new Error("Service vocal cloud non chargé");
+        const blob=await window.LilaCloud.synthesize(this.provider,text);
+        return await this.#playBlob(blob);
+      }catch(e){
+        if(e?.name==="AbortError")return false;
+        console.warn(`${this.provider} TTS indisponible, voix locale utilisée`,e);
+      }
+    }
+
     if(this.provider==="piper"&&this.piperEndpoint){
       try{return await this.#speakPiper(text);}
       catch(e){
@@ -37,14 +48,15 @@ export class VoiceService{
         console.warn("Piper indisponible, voix locale utilisée",e);
       }
     }
-    return await this.#speakBrowser(text,lang);
+
+    return this.#speakBrowser(text,lang);
   }
 
   repeat(){return this.speak(this.lastText,{force:true});}
 
-  async testPiper(text="Bonjour ! Je suis Lila. La voix Piper fonctionne correctement."){
+  async testPiper(text="Bonjour ! Je suis Lila."){
     this.cancel();
-    return await this.#speakPiper(text);
+    return this.#speakPiper(text);
   }
 
   cancel(){
@@ -63,11 +75,29 @@ export class VoiceService{
       const u=new SpeechSynthesisUtterance(text);
       u.lang=lang;u.rate=.84;u.pitch=1.04;u.volume=1;
       const voices=window.speechSynthesis.getVoices();
-      const langVoices=voices.filter(x=>x.lang===lang||x.lang?.startsWith(lang.slice(0,2)));
-      const preferred=langVoices.find(x=>/premium|enhanced|audrey|am[eé]lie|thomas|aur[eé]lie/i.test(x.name));
+      const langVoices=voices.filter(x=>x.lang===lang||x.lang?.startsWith("fr"));
+      const preferred=langVoices.find(x=>/premium|enhanced|audrey|am[eé]lie|aur[eé]lie/i.test(x.name));
       if(preferred||langVoices[0])u.voice=preferred||langVoices[0];
       u.onend=()=>finish(true);u.onerror=()=>finish(false);
       window.speechSynthesis.speak(u);
+    });
+  }
+
+  async #playBlob(blob){
+    const url=URL.createObjectURL(blob),audio=new Audio(url);this.currentAudio=audio;
+    return new Promise(async(resolve,reject)=>{
+      let settled=false;
+      const finish=(ok,error)=>{
+        if(settled)return;settled=true;
+        if(this.currentAudio===audio)this.currentAudio=null;
+        if(this.currentResolve===finish)this.currentResolve=null;
+        URL.revokeObjectURL(url);
+        if(error)reject(error);else resolve(ok);
+      };
+      this.currentResolve=finish;
+      audio.addEventListener("ended",()=>finish(true),{once:true});
+      audio.addEventListener("error",()=>finish(false,new Error("Lecture audio impossible")),{once:true});
+      try{await audio.play();}catch(e){finish(false,e);}
     });
   }
 
@@ -78,41 +108,17 @@ export class VoiceService{
 
   async #speakPiper(text){
     if(!this.piperEndpoint)throw new Error("Adresse Piper non configurée");
-
-    const controller=new AbortController();
-    this.currentController=controller;
+    const controller=new AbortController();this.currentController=controller;
     const payload={text,length_scale:this.piperLengthScale};
     if(this.piperVoice)payload.voice=this.piperVoice;
     if(this.piperSpeaker)payload.speaker=this.piperSpeaker;
-
-    const headers={"Content-Type":"text/plain;charset=UTF-8"};
+    const headers={"Content-Type":"application/json"};
     if(this.piperToken)headers.Authorization=`Bearer ${this.piperToken}`;
 
     let r;
-    try{
-      r=await fetch(this.#piperUrl(),{
-        method:"POST",headers,body:JSON.stringify(payload),signal:controller.signal,mode:"cors",cache:"no-store"
-      });
-    }finally{
-      if(this.currentController===controller)this.currentController=null;
-    }
+    try{r=await fetch(this.#piperUrl(),{method:"POST",headers,body:JSON.stringify(payload),signal:controller.signal,mode:"cors",cache:"no-store"});}
+    finally{if(this.currentController===controller)this.currentController=null;}
     if(!r.ok)throw new Error(`Piper HTTP ${r.status}`);
-
-    const blob=await r.blob();
-    const url=URL.createObjectURL(blob);
-    const audio=new Audio(url);this.currentAudio=audio;
-    return await new Promise(async resolve=>{
-      let settled=false;
-      const finish=ok=>{
-        if(settled)return;settled=true;
-        if(this.currentAudio===audio)this.currentAudio=null;
-        if(this.currentResolve===finish)this.currentResolve=null;
-        URL.revokeObjectURL(url);resolve(ok);
-      };
-      this.currentResolve=finish;
-      audio.addEventListener("ended",()=>finish(true),{once:true});
-      audio.addEventListener("error",()=>finish(false),{once:true});
-      try{await audio.play();}catch(e){finish(false);throw e;}
-    });
+    return this.#playBlob(await r.blob());
   }
 }
