@@ -1,6 +1,6 @@
-const CACHE="lila-v5";
+const CACHE="lila-v6";
 const FILES=[
-  "./","./index.html","./manifest.webmanifest","./assets/css/app.css",
+  "./","./index.html","./manifest.webmanifest","./assets/css/app.css","./assets/css/mobile-fit.css",
   "./assets/js/app.js","./assets/js/data.js","./assets/js/utils.js","./assets/js/voice.js",
   "./games/manifest.js","./games/discover/plugin.js","./games/find-image/plugin.js",
   "./games/find-letter/plugin.js","./games/count/plugin.js","./games/recognize-number/plugin.js","./games/smart/plugin.js"
