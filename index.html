@@ -11,9 +11,14 @@
   <link rel="stylesheet" href="./assets/css/app.css">
   <style>
     .feedbackWrong{color:#d9384e;display:inline-block;margin:2px 8px}.feedbackCorrect{color:#239a63;display:inline-block;margin:2px 8px}
-    .settingSelect{min-width:90px;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:8px 10px;font-weight:900;font-size:17px}
+    .settingSelect{min-width:90px;max-width:230px;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:8px 10px;font-weight:900;font-size:16px}
+    .settingInput{width:100%;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:10px 12px;font-size:15px}
     .rangeRow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;width:100%}.rangeBox{display:flex;align-items:center;gap:8px}.rangeBox label{font-size:14px;color:#6a8094;font-weight:800}
     .waitButton[disabled]{opacity:.58;cursor:default}
+    .piperSettings{margin-top:10px;padding:14px;border:2px solid #e6eef5;border-radius:18px;background:#f9fcff}.piperSettings[hidden]{display:none}
+    .piperField{display:grid;gap:6px;margin-bottom:10px}.piperField label{font-size:13px;font-weight:850;color:#587085}
+    .piperActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.piperStatus{font-size:13px;font-weight:800;color:#6a8094;line-height:1.35;margin-top:9px;min-height:18px}.piperStatus.ok{color:#23875a}.piperStatus.error{color:#c93d52}.piperStatus.warn{color:#9a6a00}
+    @media(max-width:650px){.settingRow{align-items:flex-start}.settingSelect{max-width:180px}.rangeRow{grid-template-columns:1fr auto 1fr}.rangeBox{display:grid;gap:4px}.piperActions .softBtn{font-size:14px;padding:10px 14px}}
   </style>
 </head>
 <body>
@@ -83,6 +88,7 @@
     <h2>⚙️ Réglages</h2>
     <div class="settingRow"><span>Lire les consignes à voix haute</span><button class="toggle on" id="autoSpeakToggle" aria-label="Lecture automatique"></button></div>
     <div class="settingRow"><span>Afficher les minuscules</span><button class="toggle on" id="lowerToggle" aria-label="Afficher les minuscules"></button></div>
+
     <div class="settingRow" style="display:block">
       <div style="font-weight:900;margin-bottom:10px">🔢 Plage de nombres à travailler</div>
       <div class="rangeRow">
@@ -91,9 +97,33 @@
         <div class="rangeBox"><label for="maxNumberSelect">à</label><select id="maxNumberSelect" class="settingSelect" aria-label="Nombre maximum"></select></div>
       </div>
     </div>
+
+    <div class="settingRow">
+      <label for="voiceProviderSelect">🎙️ Voix de Lila</label>
+      <select id="voiceProviderSelect" class="settingSelect" aria-label="Moteur vocal">
+        <option value="browser">Voix de l’iPad / navigateur</option>
+        <option value="piper">Piper — voix locale gratuite</option>
+      </select>
+    </div>
+
+    <div id="piperSettings" class="piperSettings" hidden>
+      <div class="piperField">
+        <label for="piperEndpointInput">Adresse HTTPS du serveur Piper</label>
+        <input id="piperEndpointInput" class="settingInput" type="url" inputmode="url" autocomplete="url" placeholder="https://voix.mondomaine.fr">
+      </div>
+      <div class="piperField">
+        <label for="piperTokenInput">Jeton d’accès — facultatif mais conseillé</label>
+        <input id="piperTokenInput" class="settingInput" type="password" autocomplete="off" placeholder="Jeton privé">
+      </div>
+      <div class="piperActions">
+        <button id="testPiperBtn" class="softBtn primary" type="button">🔊 Tester Piper</button>
+      </div>
+      <div id="piperStatus" class="piperStatus" aria-live="polite"></div>
+    </div>
+
     <div class="settingInfo">Exemples : 1–10 pour débuter, 11–20 pour travailler les nombres suivants, 21–50 ou jusqu’à 100. La plage s’applique à « Compte », « Reconnais le nombre » et « Mélange malin ».</div>
     <div class="settingInfo">Après une erreur, la mauvaise réponse reste rouge et la bonne verte. Lila explique l’erreur jusqu’au bout avant de proposer de continuer.</div>
-    <div class="settingInfo">🎙️ La voix locale fonctionne sur iPad. Le service de voix est isolé pour pouvoir ajouter Piper ensuite.</div>
+    <div class="settingInfo">🎙️ Piper est maintenant intégré. Sur l’iPad, le serveur Piper doit être accessible en HTTPS. Si Piper n’est pas disponible, Lila repasse automatiquement sur la voix locale.</div>
     <div style="margin-top:16px;text-align:right"><button class="nextBig" id="closeSettings">Fermer</button></div>
   </div>
 </div>
