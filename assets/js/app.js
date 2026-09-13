@@ -10,10 +10,13 @@ const els={
   feedback:$("#feedback"),actions:$("#discoverActions"),reward:$("#reward"),modeGrid:$("#modeGrid"),stage:$("#stage")
 };
 
+const savedMax=Number(localStorage.getItem("lilaMaxNumber"));
+const initialMax=Number.isFinite(savedMax)&&savedMax>=3&&savedMax<=20?savedMax:20;
+
 const voice=new VoiceService();
 const state={
   gameId:null,score:0,streak:0,correctSinceReward:0,questions:0,locked:false,current:null,
-  sound:true,autoSpeak:true,showLower:true,maxNumber:10,mistakeQueue:[],discoverIndex:0,
+  sound:true,autoSpeak:true,showLower:true,maxNumber:initialMax,mistakeQueue:[],discoverIndex:0,
   correctChoice:null,lastCorrectPositions:{},roundHint:null,smartSubgame:null
 };
 
@@ -43,21 +46,36 @@ function clearStage(){
 function showReward(){
   els.reward.classList.add("show");$("#rewardText").textContent=`Tu as réussi ${state.correctSinceReward} réponses. Lila est fière de toi !`;state.correctSinceReward=0;
 }
-function afterAnswer(ok,item){
+function numberWord(value){return NUMBER_WORDS[Number(value)]||String(value);}
+function afterAnswer(ok,item,{selectedKey=null,correctKey=null}={}){
   state.questions++;
   if(ok){
     state.score++;state.streak++;state.correctSinceReward++;
     els.feedback.textContent=state.streak>=3?"🌟 Bravo, quelle belle série !":"✅ Bravo !";
     els.bubble.textContent=state.streak>=3?"Tu deviens très fort !":"Oui, c’est exactement ça !";burst();
     voice.speak(state.streak>=3?"Bravo ! Quelle belle série !":"Bravo !");
-  }else{
-    state.streak=0;els.feedback.textContent="💡 Pas grave. Regarde bien la bonne réponse.";
-    els.bubble.textContent="On apprend aussi quand on se trompe. Regarde l’indice.";
-    if(item?.l)state.mistakeQueue.push(item);
-    voice.speak("Pas grave. Regarde bien la bonne réponse.");
+    updateStats();
+    if(state.correctSinceReward>=5)setTimeout(showReward,700);else setTimeout(nextRound,1150);
+    return;
   }
+
+  state.streak=0;
+  const isNumberGame=item?.type==="count"||item?.type==="recognize-number";
+  if(isNumberGame&&selectedKey!==null&&correctKey!==null){
+    els.feedback.innerHTML=`<span class="feedbackWrong">❌ Tu as choisi <strong>${selectedKey}</strong>.</span> <span class="feedbackCorrect">✅ Le bon nombre est <strong>${correctKey}</strong>.</span>`;
+    els.bubble.textContent=`Tu t’es trompé, ce n’est pas grave. Tu as choisi le nombre ${selectedKey}. Le nombre ${correctKey} est ici.`;
+    voice.speak(`Tu t'es trompé, ce n'est pas grave. Tu as choisi le nombre ${numberWord(selectedKey)}. Le bon nombre, ${numberWord(correctKey)}, est ici.`);
+  }else{
+    els.feedback.innerHTML=`<span class="feedbackWrong">❌ Ce n’est pas cette réponse.</span> <span class="feedbackCorrect">✅ Regarde la bonne réponse en vert.</span>`;
+    els.bubble.textContent="Tu t’es trompé, ce n’est pas grave. Regarde la bonne réponse en vert.";
+    voice.speak("Tu t'es trompé, ce n'est pas grave. Regarde la bonne réponse en vert.");
+  }
+  if(item?.l)state.mistakeQueue.push(item);
   updateStats();
-  if(ok&&state.correctSinceReward>=5)setTimeout(showReward,700);else setTimeout(nextRound,ok?1150:1800);
+
+  // Après une erreur, on ne change jamais de question automatiquement :
+  // l'enfant garde le temps de regarder le rouge et le vert et d'écouter Lila.
+  addAction("J’ai compris, continuer ➜",nextRound);
 }
 
 function pickLearningItem(){
@@ -84,7 +102,8 @@ function renderChoices(options,correctKey,{item=null,slotKey=state.gameId}={}){
     b.onclick=()=>{
       if(state.locked)return;state.locked=true;
       const ok=String(opt.key)===String(correctKey);b.classList.add(ok?"good":"bad");
-      if(state.correctChoice)state.correctChoice.classList.add("good");afterAnswer(ok,item);
+      if(state.correctChoice)state.correctChoice.classList.add("good");
+      afterAnswer(ok,item,{selectedKey:opt.key,correctKey});
     };
     els.choices.appendChild(b);
   });
@@ -146,7 +165,13 @@ function toggle(id,key,onValue,offValue,onChange){
 }
 toggle("#autoSpeakToggle","autoSpeak",true,false,v=>voice.configure({autoSpeak:v}));
 toggle("#lowerToggle","showLower",true,false);
-toggle("#tenToggle","maxNumber",10,5);
+
+const maxNumberSelect=$("#maxNumberSelect");
+maxNumberSelect.value=String(state.maxNumber);
+maxNumberSelect.onchange=()=>{
+  state.maxNumber=Math.max(3,Math.min(20,Number(maxNumberSelect.value)||20));
+  localStorage.setItem("lilaMaxNumber",String(state.maxNumber));
+};
 
 voice.configure({sound:state.sound,autoSpeak:state.autoSpeak});
 renderHome();updateStats();
