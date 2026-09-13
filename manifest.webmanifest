@@ -1,0 +1,10 @@
+{
+  "name": "Lila apprend avec toi",
+  "short_name": "Lila",
+  "description": "Jeux éducatifs modulaires pour apprendre les lettres et les nombres.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6fbff",
+  "theme_color": "#ffd166",
+  "lang": "fr"
+}
