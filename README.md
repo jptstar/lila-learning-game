@@ -7,11 +7,11 @@ Petit site éducatif modulaire pour apprendre les lettres et les nombres sur ord
 Le site est volontairement séparé en un **noyau** et des **plugins de jeu**.
 
 ```text
-index.html                    # coquille / écran d'accueil
+index.html                    # coquille / écran d'accueil / réglages
 assets/css/app.css            # présentation commune
-assets/js/app.js              # moteur commun : score, réponses, récompenses
-assets/js/data.js             # alphabet, images, nombres
-assets/js/voice.js            # fournisseur de voix (navigateur, Piper à venir)
+assets/js/app.js              # moteur commun : score, réponses, corrections, réglages
+assets/js/data.js             # alphabet, vocabulaire, grammaire, nombres 1–100
+assets/js/voice.js            # voix navigateur + Piper
 assets/js/utils.js            # fonctions utilitaires
 
 games/
@@ -20,8 +20,15 @@ games/
   find-image/plugin.js        # Trouve l'image
   find-letter/plugin.js       # Trouve la lettre
   count/plugin.js             # Compte
-  recognize-number/plugin.js  # Reconnais les nombres 1 à 20
+  recognize-number/plugin.js  # Reconnais les nombres dans une plage réglable
   smart/plugin.js             # Mélange malin
+
+piper-server/                 # serveur vocal local optionnel
+  Dockerfile
+  docker-compose.yml
+  entrypoint.sh
+  server.py
+  README.md
 ```
 
 Chaque plugin exporte un objet contenant `id`, `icon`, `title`, `description` et `play(api)`.
@@ -49,9 +56,57 @@ export const monJeu = {
 };
 ```
 
-## Jeu des nombres 1–20
+## Nombres 1–100
 
-La tuile **Reconnais le nombre** demande à l'enfant de reconnaître les écritures chiffrées de 1 à 20. La bonne réponse change de position automatiquement et n'est pas placée deux fois de suite au même emplacement.
+Les jeux numériques travaillent de **1 à 100** avec une plage réglable dans les paramètres.
+On peut par exemple choisir :
+
+- 1–10 pour commencer ;
+- 11–20 lorsque 1–10 est acquis ;
+- 21–50 ;
+- 51–100 ;
+- ou toute autre plage d'au moins trois nombres.
+
+La position de la bonne réponse varie automatiquement.
+
+Après une erreur :
+
+- le choix erroné reste rouge ;
+- la bonne réponse reste verte ;
+- Lila explique la différence à voix haute ;
+- aucune nouvelle question ne démarre pendant l'explication ;
+- l'enfant choisit lui-même quand continuer.
+
+## Français et synthèse vocale
+
+Les textes parlés sont rédigés comme des phrases françaises complètes plutôt que par assemblage approximatif de fragments.
+Les formes sensibles à l'élision sont stockées explicitement, par exemple **« d'étoiles »** et non **« de étoiles »**.
+
+Les lettres possèdent aussi leur nom oral français (`bé`, `cé`, `effe`, `ache`, `double vé`, `i grec`, etc.) afin que la synthèse vocale ne lise pas simplement le caractère brut.
+
+## Piper — voix locale gratuite
+
+Piper est intégré comme moteur vocal optionnel dans **Réglages → Voix de Lila**.
+
+Le dossier [`piper-server/`](./piper-server/) contient une installation Docker prête à utiliser sur un NAS/Synology :
+
+```bash
+cd piper-server
+docker compose up -d --build
+```
+
+Le conteneur :
+
+- télécharge automatiquement une voix française Piper ;
+- utilise le serveur HTTP officiel Piper en interne ;
+- ajoute une passerelle CORS adaptée au site GitHub Pages ;
+- peut être protégée par un jeton ;
+- met les WAV en cache ;
+- expose `/health` et `/synthesize`.
+
+Pour un iPad ouvrant le site GitHub Pages, l'adresse Piper doit être publiée en **HTTPS** (par exemple avec le reverse proxy Synology). Voir `piper-server/README.md`.
+
+Si Piper n'est pas accessible, le jeu utilise automatiquement la voix locale de l'appareil en secours.
 
 ## Tester en local
 
@@ -67,18 +122,11 @@ Puis ouvrir `http://localhost:8000`.
 ## GitHub Pages
 
 Le workflow `.github/workflows/pages.yml` publie automatiquement le site lors d'un push sur `main`.
-Dans GitHub, ouvrir **Settings → Pages** et sélectionner **GitHub Actions** comme source de publication.
 
-Pour ce dépôt, l'adresse est :
+Adresse :
 
 `https://jptstar.github.io/lila-learning-game/`
 
 ## iPad
 
-L'interface est responsive en portrait et paysage. Safari iPad peut lire les consignes avec la voix locale et le site peut être ajouté à l'écran d'accueil. Un service worker met en cache les fichiers du jeu après la première visite.
-
-## Piper
-
-Le moteur de voix est isolé dans `assets/js/voice.js`. Piper pourra être ajouté sans modifier les plugins de jeu.
-
-Important pour GitHub Pages : le site est servi en HTTPS. Sur Safari/iPad, un serveur Piper en simple `http://` sur le NAS risque d'être bloqué comme contenu mixte. La bonne solution sera d'exposer Piper via une URL HTTPS (reverse proxy Synology, domaine personnel, etc.) et d'autoriser le domaine du jeu via CORS.
+L'interface est responsive en portrait et paysage. Le site peut être ajouté à l'écran d'accueil et un service worker met en cache les fichiers du jeu après la première visite.
