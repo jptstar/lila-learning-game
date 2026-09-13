@@ -21,8 +21,8 @@ export const countGame={
     api.setBubble("Compte doucement, sans te presser.");api.say(question);
     api.setHint(()=>{
       api.highlightCorrect();
-      const answer=`Il y en a ${api.NUMBER_WORDS[count]}.`;
-      api.setBubble(answer);api.say(answer,true);
+      api.setBubble(`Il y en a ${api.NUMBER_WORDS[count]}.`);
+      api.say(`Il y en a ${api.NUMBER_SPEECH_WORDS[count]}.`,true);
     });
   }
 };
