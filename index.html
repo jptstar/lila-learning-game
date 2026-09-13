@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffd166">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Lila apprend avec toi</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./assets/css/app.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="mouse">🐭</span><span>Lila apprend avec toi</span></div>
+    <div class="stats">
+      <div class="pill">⭐ <span id="score">0</span></div>
+      <div class="pill">🔥 <span id="streak">0</span></div>
+      <button class="iconBtn" id="soundBtn" title="Son" aria-label="Activer ou couper le son">🔊</button>
+      <button class="iconBtn" id="settingsBtn" title="Réglages" aria-label="Ouvrir les réglages">⚙️</button>
+    </div>
+  </div>
+  <div class="progressWrap"><div class="progress" id="progress"></div></div>
+
+  <main>
+    <section id="home" class="screen active">
+      <div class="hero">
+        <div>
+          <h1>Apprendre en jouant, vraiment.</h1>
+          <p>Chaque tuile est un petit jeu indépendant. On peut en ajouter de nouveaux sans modifier les jeux déjà existants.</p>
+        </div>
+        <div class="heroArt" aria-hidden="true">
+          <span class="float f1">🔤</span><span class="float f2">⭐</span><span class="float f3">🍎</span><span class="float f4">🔢</span>
+          <div class="bigMouse">🐭</div>
+        </div>
+      </div>
+
+      <div class="modeGrid" id="modeGrid"></div>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div class="gameShell">
+        <aside class="guide">
+          <div class="guideMouse">🐭</div>
+          <div class="bubble" id="bubble">Je suis Lila. On joue ?</div>
+          <div class="guideControls">
+            <button class="softBtn" id="repeatBtn">🔊 Réécouter</button>
+            <button class="softBtn primary" id="hintBtn">💡 Indice</button>
+            <button class="softBtn home" id="homeBtn">🏠 Accueil</button>
+          </div>
+        </aside>
+
+        <section class="stage" id="stage">
+          <div class="question" id="question"></div>
+          <div class="subQuestion" id="subQuestion"></div>
+          <div class="visualWrap" id="visual"></div>
+          <div class="choices" id="choices"></div>
+          <div class="feedback" id="feedback"></div>
+          <div class="discoverActions" id="discoverActions"></div>
+
+          <div class="reward" id="reward">
+            <div class="rewardCard">
+              <div class="rewardEmoji">🏆</div>
+              <h2>Super série !</h2>
+              <p id="rewardText">Tu viens de réussir 5 réponses.</p>
+              <button class="nextBig" id="rewardContinue">Continuer ➜</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="settings" id="settings">
+  <div class="settingsCard">
+    <h2>⚙️ Réglages</h2>
+    <div class="settingRow"><span>Lire les consignes à voix haute</span><button class="toggle on" id="autoSpeakToggle" aria-label="Lecture automatique"></button></div>
+    <div class="settingRow"><span>Afficher les minuscules</span><button class="toggle on" id="lowerToggle" aria-label="Afficher les minuscules"></button></div>
+    <div class="settingRow"><span>Compter jusqu’à 10</span><button class="toggle on" id="tenToggle" aria-label="Compter jusqu'à 10"></button></div>
+    <div class="settingInfo">🔢 Le jeu « Reconnais le nombre » utilise toujours les nombres de 1 à 20.</div>
+    <div class="settingInfo">🎙️ La voix locale fonctionne sur iPad. Le service de voix est isolé pour pouvoir ajouter Piper ensuite.</div>
+    <div style="margin-top:16px;text-align:right"><button class="nextBig" id="closeSettings">Fermer</button></div>
+  </div>
+</div>
+
+<script type="module" src="./assets/js/app.js"></script>
+</body>
+</html>
