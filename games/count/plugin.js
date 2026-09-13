@@ -6,7 +6,8 @@ export const countGame={
     const count=min+api.rand(max-min+1);
     const obj=api.COUNT_EMOJIS[api.rand(api.COUNT_EMOJIS.length)];
     const current={type:"count",count,obj};api.setCurrent(current);
-    api.setQuestion(`Combien vois-tu de ${obj.name} ?`);
+    const question=`Combien ${obj.quantity} vois-tu ?`;
+    api.setQuestion(question);
     api.setSubQuestion(`La bonne réponse est comprise entre ${min} et ${max}. Compte tranquillement.`);
 
     const size=count<=20?56:count<=40?42:count<=70?32:26;
@@ -17,7 +18,11 @@ export const countGame={
     const pool=[];for(let n=min;n<=max;n++)if(n!==count)pool.push(n);
     while(vals.length<3&&pool.length){const idx=api.rand(pool.length);vals.push(pool.splice(idx,1)[0]);}
     api.renderChoices(vals.map(v=>({key:v,html:String(v)})),count,{item:current,slotKey:"count"});
-    api.setBubble("Compte doucement, sans te presser.");api.say(`Combien vois-tu de ${obj.name} ?`);
-    api.setHint(()=>{api.highlightCorrect();api.setBubble(`Il y en a ${api.NUMBER_WORDS[count]}.`);api.say(`Il y en a ${api.NUMBER_WORDS[count]}.`,true)});
+    api.setBubble("Compte doucement, sans te presser.");api.say(question);
+    api.setHint(()=>{
+      api.highlightCorrect();
+      const answer=`Il y en a ${api.NUMBER_WORDS[count]}.`;
+      api.setBubble(answer);api.say(answer,true);
+    });
   }
 };
