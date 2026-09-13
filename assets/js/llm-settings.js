@@ -1,3 +1,8 @@
+const mobileCss=document.createElement("link");
+mobileCss.rel="stylesheet";
+mobileCss.href="./assets/css/mobile-device.css";
+document.head.appendChild(mobileCss);
+
 const $=selector=>document.querySelector(selector);
 
 const DEFAULT_MODELS={
