@@ -1,119 +1,97 @@
 # 🐭 Lila apprend avec toi
 
-Petit site éducatif modulaire pour apprendre les lettres et les nombres sur ordinateur, tablette et iPad.
+Jeu éducatif web modulaire pour les lettres et les nombres, pensé pour ordinateur, tablette, iPad et smartphone.
 
 ## Architecture
 
-Le site est volontairement séparé en un **noyau** et des **plugins de jeu**.
-
 ```text
-index.html                    # coquille / écran d'accueil / réglages
-assets/css/app.css            # présentation commune
-assets/js/app.js              # moteur commun : score, réponses, corrections, réglages
-assets/js/data.js             # alphabet, vocabulaire, grammaire, nombres 1–100
-assets/js/voice.js            # voix navigateur + Piper
-assets/js/utils.js            # fonctions utilitaires
+index.html
+assets/
+  css/
+    app.css
+    mobile-fit.css
+    mobile-device.css
+  js/
+    app.js                 # moteur de jeu commun
+    data.js                # alphabet de référence et nombres 0–100
+    letter-catalog.js      # catalogue de 200 mots/illustrations
+    cloud-ai.js            # OpenAI / Gemini : LLM + synthèse vocale
+    voice.js               # voix appareil, OpenAI, Gemini et Piper
+    utils.js
 
 games/
-  manifest.js                 # registre des tuiles/plugins
-  discover/plugin.js          # Découvre
-  find-image/plugin.js        # Trouve l'image
-  find-letter/plugin.js       # Trouve la lettre
-  count/plugin.js             # Compte
-  recognize-number/plugin.js  # Reconnais les nombres dans une plage réglable
-  smart/plugin.js             # Mélange malin
+  manifest.js
+  discover/plugin.js
+  find-image/plugin.js
+  find-letter/plugin.js
+  count/plugin.js
+  recognize-number/plugin.js
+  smart/plugin.js
 
-piper-server/                 # serveur vocal local optionnel
-  Dockerfile
-  docker-compose.yml
-  entrypoint.sh
-  server.py
-  README.md
+ai-relay/                  # relais sécurisé OpenAI/Gemini prêt pour Docker
+piper-server/              # serveur Piper optionnel
 ```
 
-Chaque plugin exporte un objet contenant `id`, `icon`, `title`, `description` et `play(api)`.
-L'écran d'accueil crée automatiquement une tuile pour chaque plugin déclaré dans `games/manifest.js`.
+Chaque jeu reste un plugin indépendant enregistré dans `games/manifest.js`.
 
-## Ajouter un jeu
+## Nombres
 
-1. Créer un dossier, par exemple `games/ordre-nombres/`.
-2. Ajouter `plugin.js`.
-3. Importer le plugin dans `games/manifest.js`.
-4. Ajouter le plugin dans le tableau `GAMES`.
+Les deux bornes utilisent exactement les mêmes valeurs :
 
-Exemple minimal :
+`0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100`
 
-```js
-export const monJeu = {
-  id: "mon-jeu",
-  icon: "🎲",
-  title: "Mon jeu",
-  description: "Une petite description.",
-  play(api) {
-    api.setQuestion("Ma question");
-    api.setBubble("Lila explique la mission.");
-  }
-};
-```
+Une plage doit avoir une borne de fin supérieure à la borne de début. Exemples : `0–10`, `10–20`, `30–40`, `20–60`.
 
-## Nombres 1–100
+Les jeux numériques évitent de proposer deux fois de suite le même nombre cible.
 
-Les jeux numériques travaillent de **1 à 100** avec une plage réglable dans les paramètres.
-On peut par exemple choisir :
+## Lettres et images
 
-- 1–10 pour commencer ;
-- 11–20 lorsque 1–10 est acquis ;
-- 21–50 ;
-- 51–100 ;
-- ou toute autre plage d'au moins trois nombres.
+`assets/js/letter-catalog.js` contient **200 mots illustrés** adaptés à un usage enfant et répartis sur l’alphabet. Les jeux « Trouve l’image » et « Trouve la lettre » utilisent ce catalogue.
 
-La position de la bonne réponse varie automatiquement.
+Le moteur évite deux questions identiques consécutives. Pour « Trouve la lettre », il évite aussi de donner deux fois de suite la même lettre comme réponse.
 
-Après une erreur :
+## Séries
 
-- le choix erroné reste rouge ;
-- la bonne réponse reste verte ;
-- Lila explique la différence à voix haute ;
-- aucune nouvelle question ne démarre pendant l'explication ;
-- l'enfant choisit lui-même quand continuer.
+Une série comporte **10 activités**. La barre de progression va de 0 à 100 %. Le message « Quelle belle série ! » n’est déclenché qu’à la fin des 10 activités.
 
-## Français et synthèse vocale
+## OpenAI et Gemini
 
-Les textes parlés sont rédigés comme des phrases françaises complètes plutôt que par assemblage approximatif de fragments.
-Les formes sensibles à l'élision sont stockées explicitement, par exemple **« d'étoiles »** et non **« de étoiles »**.
+Les réglages séparent clairement :
 
-Les lettres possèdent aussi leur nom oral français (`bé`, `cé`, `effe`, `ache`, `double vé`, `i grec`, etc.) afin que la synthèse vocale ne lise pas simplement le caractère brut.
+- la **connexion API** ;
+- le **LLM** utilisé pour les futures fonctions génératives ;
+- la **voix** utilisée par Lila.
 
-## Piper — voix locale gratuite
+### Connexion directe
 
-Piper est intégré comme moteur vocal optionnel dans **Réglages → Voix de Lila**.
+Pour un test personnel, une clé OpenAI ou Gemini peut être saisie dans le navigateur. Elle est conservée uniquement dans `sessionStorage`, donc jusqu’à la fermeture de l’onglet.
 
-Le dossier [`piper-server/`](./piper-server/) contient une installation Docker prête à utiliser sur un NAS/Synology :
+### Relais sécurisé
+
+Pour un usage permanent, utiliser `ai-relay/`. Les clés OpenAI et Gemini restent alors côté serveur et ne sont jamais envoyées au navigateur.
+
+Le même relais prend en charge :
+
+- les requêtes LLM ;
+- la synthèse vocale OpenAI ;
+- la synthèse vocale Gemini.
+
+Voir [`ai-relay/README.md`](./ai-relay/README.md).
+
+## Voix
+
+Quatre moteurs sont disponibles :
+
+- voix de l’appareil ;
+- OpenAI TTS ;
+- Gemini TTS ;
+- Piper local.
+
+OpenAI et Gemini disposent dans les réglages de leur modèle vocal, de la voix et du style de lecture. Piper reste disponible comme solution locale.
+
+## Test local
 
 ```bash
-cd piper-server
-docker compose up -d --build
-```
-
-Le conteneur :
-
-- télécharge automatiquement une voix française Piper ;
-- utilise le serveur HTTP officiel Piper en interne ;
-- ajoute une passerelle CORS adaptée au site GitHub Pages ;
-- peut être protégée par un jeton ;
-- met les WAV en cache ;
-- expose `/health` et `/synthesize`.
-
-Pour un iPad ouvrant le site GitHub Pages, l'adresse Piper doit être publiée en **HTTPS** (par exemple avec le reverse proxy Synology). Voir `piper-server/README.md`.
-
-Si Piper n'est pas accessible, le jeu utilise automatiquement la voix locale de l'appareil en secours.
-
-## Tester en local
-
-Le projet utilise des modules JavaScript. Il faut donc l'ouvrir via HTTP plutôt que directement avec `file://`.
-
-```bash
-cd lila-learning-game
 python3 -m http.server 8000
 ```
 
@@ -121,12 +99,6 @@ Puis ouvrir `http://localhost:8000`.
 
 ## GitHub Pages
 
-Le workflow `.github/workflows/pages.yml` publie automatiquement le site lors d'un push sur `main`.
-
-Adresse :
+Le workflow `.github/workflows/pages.yml` publie automatiquement `main` sur :
 
 `https://jptstar.github.io/lila-learning-game/`
-
-## iPad
-
-L'interface est responsive en portrait et paysage. Le site peut être ajouté à l'écran d'accueil et un service worker met en cache les fichiers du jeu après la première visite.
