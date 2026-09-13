@@ -19,10 +19,16 @@ if(initialMax-initialMin<2){
   else{initialMax=100;initialMin=98;}
 }
 
+const savedVoiceProvider=localStorage.getItem("lilaVoiceProvider");
+const initialVoiceProvider=savedVoiceProvider==="piper"?"piper":"browser";
+const initialPiperEndpoint=localStorage.getItem("lilaPiperEndpoint")||"";
+const initialPiperToken=localStorage.getItem("lilaPiperToken")||"";
+
 const voice=new VoiceService();
 const state={
   gameId:null,score:0,streak:0,correctSinceReward:0,questions:0,locked:false,current:null,
   sound:true,autoSpeak:true,showLower:true,minNumber:initialMin,maxNumber:initialMax,
+  voiceProvider:initialVoiceProvider,piperEndpoint:initialPiperEndpoint,piperToken:initialPiperToken,
   mistakeQueue:[],discoverIndex:0,correctChoice:null,lastCorrectPositions:{},roundHint:null,smartSubgame:null,
   roundId:0,advanceTimer:null,errorHold:false
 };
@@ -64,7 +70,7 @@ async function afterAnswer(ok,item,{selectedKey=null,correctKey=null,roundId=sta
   if(ok){
     state.score++;state.streak++;state.correctSinceReward++;
     els.feedback.textContent=state.streak>=3?"🌟 Bravo, quelle belle série !":"✅ Bravo !";
-    els.bubble.textContent=state.streak>=3?"Tu deviens très fort !":"Oui, c’est exactement ça !";burst();updateStats();
+    els.bubble.textContent=state.streak>=3?"Quelle belle série !":"Oui, c’est exactement ça !";burst();updateStats();
     await voice.speak(state.streak>=3?"Bravo ! Quelle belle série !":"Bravo !");
     if(roundId!==state.roundId)return;
     if(state.correctSinceReward>=5){state.advanceTimer=setTimeout(()=>{if(roundId===state.roundId)showReward();},350);}
@@ -78,12 +84,12 @@ async function afterAnswer(ok,item,{selectedKey=null,correctKey=null,roundId=sta
 
   if(isNumberGame&&selectedKey!==null&&correctKey!==null){
     els.feedback.innerHTML=`<span class="feedbackWrong">❌ Tu as choisi <strong>${selectedKey}</strong>.</span> <span class="feedbackCorrect">✅ La bonne réponse est <strong>${correctKey}</strong>.</span>`;
-    els.bubble.textContent=`Tu as choisi ${selectedKey}. Ce n’est pas grave. Regarde : ${selectedKey} est en rouge et ${correctKey} est en vert.`;
-    explanation=`Tu t'es trompé, ce n'est pas grave. Tu as choisi le nombre ${selectedKey}, ${numberWord(selectedKey)}. Ce n'est pas le bon nombre. La bonne réponse est ${correctKey}, ${numberWord(correctKey)}. Regarde bien : ${selectedKey} est en rouge et ${correctKey} est en vert. Prends ton temps.`;
+    els.bubble.textContent=`Ce n’est pas la bonne réponse, mais ce n’est pas grave. Tu as choisi ${selectedKey}. La bonne réponse est ${correctKey}.`;
+    explanation=`Ce n'est pas la bonne réponse, mais ce n'est pas grave. Tu as choisi le nombre ${numberWord(selectedKey)}. Écoute bien : ${numberWord(selectedKey)} n'est pas la bonne réponse. La bonne réponse est le nombre ${numberWord(correctKey)}. Regarde bien : le nombre que tu as choisi est en rouge, et la bonne réponse est en vert. Prends ton temps pour les comparer.`;
   }else{
     els.feedback.innerHTML=`<span class="feedbackWrong">❌ Ce n’est pas cette réponse.</span> <span class="feedbackCorrect">✅ La bonne réponse est en vert.</span>`;
-    els.bubble.textContent="Tu t’es trompé, ce n’est pas grave. La réponse choisie est en rouge et la bonne réponse est en vert.";
-    explanation="Tu t'es trompé, ce n'est pas grave. Regarde bien. La réponse que tu as choisie est en rouge, et la bonne réponse est en vert. Prends ton temps pour les comparer.";
+    els.bubble.textContent="Ce n’est pas la bonne réponse, mais ce n’est pas grave. La réponse choisie est en rouge et la bonne réponse est en vert.";
+    explanation="Ce n'est pas la bonne réponse, mais ce n'est pas grave. Regarde bien. La réponse que tu as choisie est en rouge, et la bonne réponse est en vert. Prends ton temps pour les comparer.";
   }
   if(item?.l)state.mistakeQueue.push(item);
 
@@ -210,7 +216,57 @@ function syncRange(changed){
 minNumberSelect.value=String(state.minNumber);maxNumberSelect.value=String(state.maxNumber);
 minNumberSelect.onchange=()=>syncRange("min");maxNumberSelect.onchange=()=>syncRange("max");
 
-voice.configure({sound:state.sound,autoSpeak:state.autoSpeak});
-renderHome();updateStats();
+const voiceProviderSelect=$("#voiceProviderSelect");
+const piperSettings=$("#piperSettings");
+const piperEndpointInput=$("#piperEndpointInput");
+const piperTokenInput=$("#piperTokenInput");
+const piperStatus=$("#piperStatus");
+const testPiperBtn=$("#testPiperBtn");
+
+function setPiperStatus(text,kind=""){
+  piperStatus.textContent=text;
+  piperStatus.className=`piperStatus ${kind}`.trim();
+}
+function refreshPiperPanel(){
+  const enabled=state.voiceProvider==="piper";
+  piperSettings.hidden=!enabled;
+  if(enabled&&!state.piperEndpoint)setPiperStatus("Indique l’adresse HTTPS de ton serveur Piper.","warn");
+  else if(enabled)setPiperStatus("Piper sélectionné. Tu peux tester la voix.");
+  else setPiperStatus("");
+}
+function saveVoiceSettings(){
+  state.voiceProvider=voiceProviderSelect.value==="piper"?"piper":"browser";
+  state.piperEndpoint=piperEndpointInput.value.trim();
+  state.piperToken=piperTokenInput.value.trim();
+  localStorage.setItem("lilaVoiceProvider",state.voiceProvider);
+  localStorage.setItem("lilaPiperEndpoint",state.piperEndpoint);
+  localStorage.setItem("lilaPiperToken",state.piperToken);
+  voice.configure({provider:state.voiceProvider,piperEndpoint:state.piperEndpoint,piperToken:state.piperToken});
+  refreshPiperPanel();
+}
+
+voiceProviderSelect.value=state.voiceProvider;
+piperEndpointInput.value=state.piperEndpoint;
+piperTokenInput.value=state.piperToken;
+voiceProviderSelect.onchange=saveVoiceSettings;
+piperEndpointInput.onchange=saveVoiceSettings;
+piperTokenInput.onchange=saveVoiceSettings;
+testPiperBtn.onclick=async()=>{
+  saveVoiceSettings();
+  if(!state.piperEndpoint){setPiperStatus("Adresse Piper manquante.","error");return;}
+  testPiperBtn.disabled=true;setPiperStatus("Connexion à Piper…");
+  try{
+    await voice.testPiper("Bonjour ! Je suis Lila. La voix Piper fonctionne correctement.");
+    setPiperStatus("✅ Piper fonctionne.","ok");
+  }catch(e){
+    console.warn(e);setPiperStatus("❌ Piper est inaccessible. Vérifie l’adresse HTTPS, le certificat, CORS et le jeton.","error");
+  }finally{testPiperBtn.disabled=false;}
+};
+
+voice.configure({
+  sound:state.sound,autoSpeak:state.autoSpeak,provider:state.voiceProvider,
+  piperEndpoint:state.piperEndpoint,piperToken:state.piperToken
+});
+refreshPiperPanel();renderHome();updateStats();
 
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){navigator.serviceWorker.register("./service-worker.js").catch(console.warn);}
