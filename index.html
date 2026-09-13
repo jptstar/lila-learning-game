@@ -11,17 +11,17 @@
   <link rel="stylesheet" href="./assets/css/app.css">
   <link rel="stylesheet" href="./assets/css/mobile-fit.css">
   <link rel="stylesheet" href="./assets/css/mobile-device.css">
+  <link rel="stylesheet" href="./assets/css/games-extra.css">
   <style>
     .feedbackWrong{color:#d9384e;display:inline-block;margin:2px 8px}.feedbackCorrect{color:#239a63;display:inline-block;margin:2px 8px}
     .settingsSection{margin:14px 0;padding:14px;border:2px solid #e6eef5;border-radius:18px;background:#f9fcff}.settingsSection h3{margin:0 0 12px;font-size:17px;color:#17324d}
-    .settingSelect{min-width:90px;max-width:270px;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:9px 10px;font-weight:900;font-size:16px}
+    .settingSelect{min-width:90px;max-width:290px;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:9px 10px;font-weight:900;font-size:16px}
     .settingInput{width:100%;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:10px 12px;font-size:16px;box-sizing:border-box}.settingTextarea{min-height:82px;resize:vertical}
     .rangeRow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;width:100%}.rangeBox{display:flex;align-items:center;gap:8px}.rangeBox label{font-size:14px;color:#6a8094;font-weight:800}
     .field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:13px;font-weight:850;color:#587085}.field:last-child{margin-bottom:0}
-    .subpanel{margin-top:10px;padding:12px;border-radius:14px;background:#fff}.subpanel[hidden],.piperSettings[hidden],.cloudVoiceSettings[hidden]{display:none}
+    .fieldHelp{font-size:12px;color:#7b8fa1;line-height:1.35}.subpanel{margin-top:10px;padding:12px;border-radius:14px;background:#fff}.subpanel[hidden],.piperSettings[hidden],.cloudVoiceSettings[hidden]{display:none}
     .actionsRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.apiStatus,.piperStatus{font-size:13px;font-weight:800;color:#6a8094;line-height:1.35;margin-top:9px;min-height:18px}.apiStatus.ok,.piperStatus.ok{color:#23875a}.apiStatus.error,.piperStatus.error{color:#c93d52}.piperStatus.warn{color:#9a6a00}
-    .securityNote{font-size:12.5px;line-height:1.4;color:#6a8094;background:#fff7dc;border-radius:12px;padding:9px 10px;margin:8px 0}.keyLink{font-weight:900;color:#246ca8;text-decoration:none;font-size:13px}
-    .piperSettings,.cloudVoiceSettings{margin-top:10px;padding:12px;border-radius:14px;background:#fff}
+    .securityNote{font-size:12.5px;line-height:1.4;color:#6a8094;background:#fff7dc;border-radius:12px;padding:9px 10px;margin:8px 0}.keyLink{font-weight:900;color:#246ca8;text-decoration:none;font-size:13px}.piperSettings,.cloudVoiceSettings{margin-top:10px;padding:12px;border-radius:14px;background:#fff}
     @media(max-width:650px){.settingRow{align-items:flex-start}.settingSelect{max-width:190px}.rangeRow{grid-template-columns:1fr auto 1fr}.rangeBox{display:grid;gap:4px}.settingsSection{padding:11px;margin:10px 0}.actionsRow .softBtn{font-size:13px;padding:9px 12px}}
   </style>
 </head>
@@ -37,18 +37,11 @@
     </div>
   </div>
   <div class="progressWrap"><div class="progress" id="progress"></div></div>
-
   <main>
     <section id="home" class="screen active">
       <div class="hero">
-        <div>
-          <h1>Apprendre en jouant, vraiment.</h1>
-          <p>Des petits jeux pour apprendre les lettres et les nombres à son rythme.</p>
-        </div>
-        <div class="heroArt" aria-hidden="true">
-          <span class="float f1">🔤</span><span class="float f2">⭐</span><span class="float f3">🍎</span><span class="float f4">🔢</span>
-          <div class="bigMouse">🐭</div>
-        </div>
+        <div><h1>Apprendre en jouant, vraiment.</h1><p>Des petits jeux pour apprendre les lettres, les nombres, les formes et les mots à son rythme.</p></div>
+        <div class="heroArt" aria-hidden="true"><span class="float f1">🔤</span><span class="float f2">⭐</span><span class="float f3">🍎</span><span class="float f4">🔢</span><div class="bigMouse">🐭</div></div>
       </div>
       <div class="modeGrid" id="modeGrid"></div>
     </section>
@@ -56,30 +49,12 @@
     <section id="gameScreen" class="screen">
       <div class="gameShell">
         <aside class="guide">
-          <div class="guideMouse">🐭</div>
-          <div class="bubble" id="bubble">Je suis Lila. On joue ?</div>
-          <div class="guideControls">
-            <button class="softBtn" id="repeatBtn">🔊 Réécouter</button>
-            <button class="softBtn primary" id="hintBtn">💡 Indice</button>
-            <button class="softBtn home" id="homeBtn">🏠 Accueil</button>
-          </div>
+          <div class="guideMouse">🐭</div><div class="bubble" id="bubble">Je suis Lila. On joue ?</div>
+          <div class="guideControls"><button class="softBtn" id="repeatBtn">🔊 Réécouter</button><button class="softBtn primary" id="hintBtn">💡 Indice</button><button class="softBtn home" id="homeBtn">🏠 Accueil</button></div>
         </aside>
-
         <section class="stage" id="stage">
-          <div class="question" id="question"></div>
-          <div class="subQuestion" id="subQuestion"></div>
-          <div class="visualWrap" id="visual"></div>
-          <div class="choices" id="choices"></div>
-          <div class="feedback" id="feedback"></div>
-          <div class="discoverActions" id="discoverActions"></div>
-          <div class="reward" id="reward">
-            <div class="rewardCard">
-              <div class="rewardEmoji">🏆</div>
-              <h2>Quelle belle série !</h2>
-              <p id="rewardText">Tu as terminé ta série.</p>
-              <button class="nextBig" id="rewardContinue">Continuer ➜</button>
-            </div>
-          </div>
+          <div class="question" id="question"></div><div class="subQuestion" id="subQuestion"></div><div class="visualWrap" id="visual"></div><div class="choices" id="choices"></div><div class="feedback" id="feedback"></div><div class="discoverActions" id="discoverActions"></div>
+          <div class="reward" id="reward"><div class="rewardCard"><div class="rewardEmoji">🏆</div><h2>Quelle belle série !</h2><p id="rewardText">Tu as terminé ta série.</p><button class="nextBig" id="rewardContinue">Continuer ➜</button></div></div>
         </section>
       </div>
     </section>
@@ -94,6 +69,7 @@
       <h3>Jeu</h3>
       <div class="settingRow"><span>Lire les consignes à voix haute</span><button class="toggle on" id="autoSpeakToggle" aria-label="Lecture automatique"></button></div>
       <div class="settingRow"><span>Afficher les minuscules</span><button class="toggle on" id="lowerToggle" aria-label="Afficher les minuscules"></button></div>
+      <div class="settingRow"><label for="discoveryModeSelect">Mode Découverte</label><select id="discoveryModeSelect" class="settingSelect"><option value="ordered">Ordre du catalogue</option><option value="random">Aléatoire</option></select></div>
     </section>
 
     <section class="settingsSection">
@@ -107,67 +83,45 @@
 
     <section class="settingsSection">
       <h3>🔐 Connexion API</h3>
-      <div class="field">
-        <label for="apiConnectionMode">Mode</label>
-        <select id="apiConnectionMode" class="settingSelect">
-          <option value="relay">Relais sécurisé</option>
-          <option value="direct">Clés API directes</option>
-        </select>
-      </div>
+      <div class="field"><label for="apiConnectionMode">Mode de connexion</label><select id="apiConnectionMode" class="settingSelect"><option value="relay">Relais sécurisé</option><option value="direct">Clés API directes</option></select></div>
 
       <div id="apiRelaySettings" class="subpanel">
-        <div class="field"><label for="apiRelayUrl">Adresse HTTPS du relais</label><input id="apiRelayUrl" class="settingInput" type="url" inputmode="url" placeholder="https://ia.mondomaine.fr/api"></div>
+        <div class="field"><label for="apiRelayUrl">Adresse HTTPS du relais</label><input id="apiRelayUrl" class="settingInput" type="url" inputmode="url" placeholder="https://ia.mondomaine.fr/api"><div class="fieldHelp">Adresse publique du serveur Lila AI Relay.</div></div>
         <div class="field"><label for="apiRelayToken">Jeton du relais</label><input id="apiRelayToken" class="settingInput" type="password" autocomplete="off" placeholder="Jeton privé"></div>
+        <div class="actionsRow"><button id="testRelayBtn" class="softBtn primary" type="button">Tester le relais</button></div>
       </div>
 
       <div id="apiDirectSettings" class="subpanel" hidden>
-        <div class="securityNote">Les clés directes restent uniquement dans la session de cet onglet. Pour un usage permanent, le relais est préférable.</div>
-        <div class="field"><label for="openaiApiKey">Clé API OpenAI</label><input id="openaiApiKey" class="settingInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-…"><a class="keyLink" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Créer ou gérer une clé OpenAI ↗</a></div>
-        <div class="field"><label for="geminiApiKey">Clé API Gemini</label><input id="geminiApiKey" class="settingInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Clé Google AI Studio"><a class="keyLink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Créer ou gérer une clé Gemini ↗</a></div>
+        <div class="securityNote">Mode de test : les clés restent dans la session de cet onglet.</div>
+        <div class="field"><label for="openaiApiKey">Clé API OpenAI</label><input id="openaiApiKey" class="settingInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-…"><a class="keyLink" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Gérer les clés OpenAI ↗</a></div>
+        <div class="field"><label for="geminiApiKey">Clé API Gemini</label><input id="geminiApiKey" class="settingInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Clé Google AI Studio"><a class="keyLink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Gérer les clés Gemini ↗</a></div>
       </div>
 
-      <div class="actionsRow"><button id="testOpenaiBtn" class="softBtn primary" type="button">Tester OpenAI</button><button id="testGeminiBtn" class="softBtn primary" type="button">Tester Gemini</button></div>
+      <div class="actionsRow"><button id="testOpenaiBtn" class="softBtn" type="button">Tester OpenAI</button><button id="testGeminiBtn" class="softBtn" type="button">Tester Gemini</button></div>
       <div id="apiStatus" class="apiStatus" aria-live="polite"></div>
     </section>
 
     <section class="settingsSection">
       <h3>🧠 LLM</h3>
-      <div class="field">
-        <label for="llmProviderSelect">Fournisseur</label>
-        <select id="llmProviderSelect" class="settingSelect">
-          <option value="none">Aucun</option>
-          <option value="openai">ChatGPT / OpenAI</option>
-          <option value="gemini">Gemini / Google</option>
-        </select>
-      </div>
-      <div class="field"><label for="llmModelInput">Modèle</label><input id="llmModelInput" class="settingInput" type="text" autocomplete="off" placeholder="Modèle LLM"></div>
+      <div class="field"><label for="llmProviderSelect">Fournisseur</label><select id="llmProviderSelect" class="settingSelect"><option value="none">Aucun</option><option value="openai">ChatGPT / OpenAI</option><option value="gemini">Gemini / Google</option></select></div>
+      <div class="field"><label for="llmModelInput">Modèle</label><input id="llmModelInput" class="settingInput" type="text" list="llmModelOptions" autocomplete="off" placeholder="Modèle LLM"><datalist id="llmModelOptions"></datalist></div>
     </section>
 
     <section class="settingsSection">
       <h3>🎙️ Voix de Lila</h3>
-      <div class="field">
-        <label for="voiceProviderSelect">Moteur vocal</label>
-        <select id="voiceProviderSelect" class="settingSelect">
-          <option value="browser">Voix de l’appareil</option>
-          <option value="openai">Voix ChatGPT / OpenAI</option>
-          <option value="gemini">Voix Gemini</option>
-          <option value="piper">Piper local</option>
-        </select>
-      </div>
+      <div class="field"><label for="voiceProviderSelect">Moteur vocal</label><select id="voiceProviderSelect" class="settingSelect"><option value="browser">Voix de l’appareil</option><option value="openai">Voix ChatGPT / OpenAI</option><option value="gemini">Voix Gemini</option><option value="piper">Piper local</option></select></div>
 
       <div id="cloudVoiceSettings" class="cloudVoiceSettings" hidden>
         <div class="field"><label for="cloudVoiceModelSelect">Modèle vocal</label><select id="cloudVoiceModelSelect" class="settingSelect"></select></div>
         <div class="field"><label for="cloudVoiceNameSelect">Voix</label><select id="cloudVoiceNameSelect" class="settingSelect"></select></div>
         <div class="field"><label for="cloudVoiceStyleInput">Style de voix</label><textarea id="cloudVoiceStyleInput" class="settingInput settingTextarea"></textarea></div>
-        <div class="actionsRow"><button id="testCloudVoiceBtn" class="softBtn primary" type="button">🔊 Tester la voix</button></div>
-        <div id="cloudVoiceStatus" class="apiStatus" aria-live="polite"></div>
+        <div class="actionsRow"><button id="testCloudVoiceBtn" class="softBtn primary" type="button">🔊 Tester la voix</button></div><div id="cloudVoiceStatus" class="apiStatus" aria-live="polite"></div>
       </div>
 
       <div id="piperSettings" class="piperSettings" hidden>
         <div class="field"><label for="piperEndpointInput">Adresse HTTPS de Piper</label><input id="piperEndpointInput" class="settingInput" type="url" inputmode="url" placeholder="https://voix.mondomaine.fr"></div>
         <div class="field"><label for="piperTokenInput">Jeton Piper</label><input id="piperTokenInput" class="settingInput" type="password" autocomplete="off" placeholder="Jeton privé"></div>
-        <div class="actionsRow"><button id="testPiperBtn" class="softBtn primary" type="button">🔊 Tester Piper</button></div>
-        <div id="piperStatus" class="piperStatus" aria-live="polite"></div>
+        <div class="actionsRow"><button id="testPiperBtn" class="softBtn primary" type="button">🔊 Tester Piper</button></div><div id="piperStatus" class="piperStatus" aria-live="polite"></div>
       </div>
     </section>
 
