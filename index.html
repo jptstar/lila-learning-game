@@ -12,14 +12,14 @@
   <link rel="stylesheet" href="./assets/css/mobile-fit.css">
   <style>
     .feedbackWrong{color:#d9384e;display:inline-block;margin:2px 8px}.feedbackCorrect{color:#239a63;display:inline-block;margin:2px 8px}
-    .settingSelect{min-width:90px;max-width:230px;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:8px 10px;font-weight:900;font-size:16px}
+    .settingSelect{min-width:90px;max-width:250px;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:8px 10px;font-weight:900;font-size:16px}
     .settingInput{width:100%;border:2px solid #dceaf4;border-radius:12px;background:#fff;color:#17324d;padding:10px 12px;font-size:15px}
     .rangeRow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;width:100%}.rangeBox{display:flex;align-items:center;gap:8px}.rangeBox label{font-size:14px;color:#6a8094;font-weight:800}
-    .waitButton[disabled]{opacity:.58;cursor:default}
     .piperSettings{margin-top:10px;padding:14px;border:2px solid #e6eef5;border-radius:18px;background:#f9fcff}.piperSettings[hidden]{display:none}
     .piperField{display:grid;gap:6px;margin-bottom:10px}.piperField label{font-size:13px;font-weight:850;color:#587085}
     .piperActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.piperStatus{font-size:13px;font-weight:800;color:#6a8094;line-height:1.35;margin-top:9px;min-height:18px}.piperStatus.ok{color:#23875a}.piperStatus.error{color:#c93d52}.piperStatus.warn{color:#9a6a00}
-    @media(max-width:650px){.settingRow{align-items:flex-start}.settingSelect{max-width:180px}.rangeRow{grid-template-columns:1fr auto 1fr}.rangeBox{display:grid;gap:4px}.piperActions .softBtn{font-size:14px;padding:10px 14px}}
+    .llmInfo{margin-top:8px;padding:10px 12px;border-radius:14px;background:#f7f4ff;color:#5d5875;font-size:12.5px;line-height:1.35}
+    @media(max-width:650px){.settingRow{align-items:flex-start}.settingSelect{max-width:185px}.rangeRow{grid-template-columns:1fr auto 1fr}.rangeBox{display:grid;gap:4px}.piperActions .softBtn{font-size:14px;padding:10px 14px}}
   </style>
 </head>
 <body>
@@ -73,8 +73,8 @@
           <div class="reward" id="reward">
             <div class="rewardCard">
               <div class="rewardEmoji">🏆</div>
-              <h2>Super série !</h2>
-              <p id="rewardText">Tu viens de réussir 5 réponses.</p>
+              <h2>Quelle belle série !</h2>
+              <p id="rewardText">Tu as terminé ta série.</p>
               <button class="nextBig" id="rewardContinue">Continuer ➜</button>
             </div>
           </div>
@@ -93,11 +93,21 @@
     <div class="settingRow" style="display:block">
       <div style="font-weight:900;margin-bottom:10px">🔢 Plage de nombres à travailler</div>
       <div class="rangeRow">
-        <div class="rangeBox"><label for="minNumberSelect">De</label><select id="minNumberSelect" class="settingSelect" aria-label="Nombre minimum"></select></div>
+        <div class="rangeBox"><label for="minNumberSelect">De</label><select id="minNumberSelect" class="settingSelect" aria-label="Dizaine de départ"></select></div>
         <span style="font-weight:950">→</span>
-        <div class="rangeBox"><label for="maxNumberSelect">à</label><select id="maxNumberSelect" class="settingSelect" aria-label="Nombre maximum"></select></div>
+        <div class="rangeBox"><label for="maxNumberSelect">à</label><select id="maxNumberSelect" class="settingSelect" aria-label="Dizaine de fin"></select></div>
       </div>
     </div>
+
+    <div class="settingRow">
+      <label for="llmProviderSelect">🧠 LLM de Lila</label>
+      <select id="llmProviderSelect" class="settingSelect" aria-label="LLM de Lila">
+        <option value="none">Aucun</option>
+        <option value="chatgpt">ChatGPT</option>
+        <option value="gemini">Gemini</option>
+      </select>
+    </div>
+    <div id="llmProviderInfo" class="llmInfo"></div>
 
     <div class="settingRow">
       <label for="voiceProviderSelect">🎙️ Voix de Lila</label>
@@ -122,9 +132,10 @@
       <div id="piperStatus" class="piperStatus" aria-live="polite"></div>
     </div>
 
-    <div class="settingInfo">Exemples : 1–10 pour débuter, 11–20 pour travailler les nombres suivants, 21–50 ou jusqu’à 100. La plage s’applique à « Compte », « Reconnais le nombre » et « Mélange malin ».</div>
-    <div class="settingInfo">Après une erreur, la mauvaise réponse reste rouge et la bonne verte. La correction vocale démarre immédiatement, mais le bouton « Continuer » est disponible tout de suite si l’enfant veut passer à la suite.</div>
-    <div class="settingInfo">🎙️ Piper est maintenant intégré. Sur l’iPad, le serveur Piper doit être accessible en HTTPS. Si Piper n’est pas disponible, Lila repasse automatiquement sur la voix locale.</div>
+    <div class="settingInfo">Les bornes se choisissent par dizaines : 1–10, 10–20, 20–30… jusqu’à 90–100. Tu peux aussi élargir une plage, par exemple 20–50.</div>
+    <div class="settingInfo">Après une erreur, la mauvaise réponse reste rouge et la bonne verte. Le bouton « Continuer » est disponible immédiatement.</div>
+    <div class="settingInfo">« Quelle belle série ! » apparaît uniquement lorsque les 10 activités de la barre de progression sont terminées.</div>
+    <div class="settingInfo">ChatGPT et Gemini sont préparés comme choix de LLM. Aucune clé privée n’est stockée dans cette page publique ; leur connexion effective passera par un relais sécurisé.</div>
     <div style="margin-top:16px;text-align:right"><button class="nextBig" id="closeSettings">Fermer</button></div>
   </div>
 </div>
