@@ -1,6 +1,7 @@
 /*
- * Lila — affichage iPhone/iPad plein écran
- * La page elle-même ne défile pas. Chaque écran exploite toute la hauteur utile.
+ * Lila — responsive iPhone / iPad
+ * Objectif : aucune page principale à faire défiler, tout en gardant Lila,
+ * les consignes et les réponses assez grands pour un enfant.
  */
 
 @media (max-width:1100px){
@@ -16,17 +17,17 @@
 
   .topbar{
     flex:0 0 auto;min-height:54px;
-    padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));
-    gap:10px;
+    padding:max(7px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 7px max(10px,env(safe-area-inset-left));
+    gap:8px;
   }
-  .brand{font-size:clamp(18px,3vw,26px);gap:8px}
-  .brand .mouse{font-size:34px}
-  .stats{gap:6px;flex-wrap:nowrap}
-  .pill{padding:6px 10px;font-size:13px}
-  .iconBtn{width:38px;height:38px;font-size:18px}
-  .progressWrap{height:5px;flex:0 0 auto}
+  .brand{font-size:clamp(18px,3vw,26px);gap:7px;min-width:0}
+  .brand .mouse{font-size:34px;flex:0 0 auto}
+  .brand span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stats{gap:5px;flex-wrap:nowrap;flex:0 0 auto}
+  .pill{padding:6px 9px;font-size:13px}
+  .iconBtn{width:38px;height:38px;font-size:18px;flex:0 0 auto}
+  .progressWrap{height:6px;flex:0 0 auto}
 
-  /* height:0 + flex:1 donne une vraie hauteur calculée aux écrans enfants. */
   main{
     flex:1 1 auto;height:0;min-height:0;overflow:hidden;
     padding:8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
@@ -36,20 +37,20 @@
   /* ---------- ACCUEIL ---------- */
   #home.active{
     display:grid;height:100%;min-height:0;
-    grid-template-rows:minmax(96px,18%) minmax(0,1fr);gap:10px;
+    grid-template-rows:minmax(104px,18%) minmax(0,1fr);gap:9px;
   }
   .hero{
     height:100%;min-height:0;padding:0;gap:12px;
-    grid-template-columns:minmax(0,1fr) minmax(100px,25%);align-items:stretch;
+    grid-template-columns:minmax(0,1fr) minmax(108px,24%);align-items:stretch;
   }
   .hero>div:first-child{display:flex;flex-direction:column;justify-content:center;min-width:0}
-  .hero h1{font-size:clamp(28px,5vw,43px);line-height:1;margin:0 0 6px}
+  .hero h1{font-size:clamp(29px,5vw,44px);line-height:1;margin:0 0 6px}
   .hero p{
     font-size:14px;line-height:1.25;margin:0;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
-  .heroArt{display:flex;height:100%;min-height:0;border-radius:22px}
-  .heroArt .bigMouse{font-size:clamp(70px,11vw,105px)}
+  .heroArt{display:flex;height:100%;min-height:0;border-radius:24px}
+  .heroArt .bigMouse{font-size:clamp(78px,12vw,112px)}
   .heroArt .float{display:none}
 
   .modeGrid{
@@ -58,13 +59,13 @@
     grid-template-rows:repeat(3,minmax(0,1fr));
   }
   .modeCard{
-    min-height:0;height:100%;padding:12px;overflow:hidden;border-radius:20px;
+    min-height:0;height:100%;padding:13px;overflow:hidden;border-radius:20px;
     display:flex;flex-direction:column;justify-content:center;
   }
-  .modeIcon{font-size:38px;margin-bottom:5px;line-height:1}
-  .modeTitle{font-size:16px;line-height:1.08}
+  .modeIcon{font-size:42px;margin-bottom:6px;line-height:1}
+  .modeTitle{font-size:17px;line-height:1.08}
   .modeDesc{
-    font-size:12px;line-height:1.18;margin-top:5px;
+    font-size:12.5px;line-height:1.2;margin-top:5px;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
 
@@ -75,75 +76,72 @@
     display:grid;grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);
   }
 
-  /* Lila doit rester un personnage visible, pas une petite icône. */
   .guide{
-    min-height:0;padding:9px 11px;border-radius:20px;
-    display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:auto auto;
+    min-height:0;padding:9px 11px;border-radius:21px;
+    display:grid;grid-template-columns:74px minmax(0,1fr);grid-template-rows:auto auto;
     gap:7px 11px;text-align:left;align-items:center;
   }
-  .guideMouse{font-size:66px;line-height:1}
+  .guideMouse{font-size:68px;line-height:1}
   .bubble{
-    margin:0;padding:10px 12px;border-radius:17px;
-    font-size:15px;line-height:1.25;font-weight:850;
-    min-height:50px;max-height:68px;overflow:hidden;
+    margin:0;padding:10px 13px;border-radius:17px;
+    font-size:15.5px;line-height:1.25;font-weight:850;
+    min-height:52px;max-height:72px;overflow:hidden;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
   }
   .bubble:before{display:none}
   .guideControls{grid-column:1/-1;margin:0;grid-template-columns:repeat(3,1fr);gap:6px}
-  .softBtn{min-height:40px;padding:7px 8px;font-size:13px}
+  .softBtn{min-height:41px;padding:7px 8px;font-size:13px}
 
-  /* La scène est une grille verticale : le visuel absorbe l'espace disponible.
-     Plus de gros vide sous les réponses. */
   .stage{
-    height:100%;min-height:0;padding:10px;border-radius:22px;overflow:hidden;
+    height:100%;min-height:0;padding:11px;border-radius:22px;overflow:hidden;
     display:grid;
-    grid-template-rows:auto auto minmax(90px,1fr) auto auto auto;
+    grid-template-rows:auto auto minmax(110px,1fr) auto auto auto;
     align-items:stretch;
   }
-  .question{font-size:clamp(23px,4vw,33px);line-height:1.05;margin:1px 0 5px}
-  .subQuestion{font-size:13px;line-height:1.18;min-height:0;margin:0 0 4px}
+  .question{font-size:clamp(24px,4.2vw,34px);line-height:1.05;margin:1px 0 5px}
+  .subQuestion{font-size:13.5px;line-height:1.18;min-height:0;margin:0 0 4px}
   .visualWrap{
-    min-height:0;max-height:none;overflow:hidden;
-    display:flex;align-items:center;justify-content:center;padding:4px 0;
+    min-height:0;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;padding:6px 0;
   }
   .illustration{
-    width:min(330px,82vw);height:min(100%,190px);min-height:100px;
-    border-radius:24px;
+    width:min(350px,84vw);height:min(100%,205px);min-height:115px;
+    border-radius:25px;
   }
-  .illustration .emoji{font-size:clamp(82px,17vw,118px)}
-  .illustration .label{bottom:7px;padding:5px 13px;font-size:16px}
+  .illustration .emoji{font-size:clamp(88px,18vw,124px)}
+  .illustration .label{bottom:7px;padding:5px 14px;font-size:16px}
   .letterCard{
-    width:min(350px,84vw);height:min(100%,195px);min-height:110px;
-    padding:11px;border-radius:24px;
+    width:min(360px,85vw);height:min(100%,205px);min-height:120px;
+    padding:11px;border-radius:25px;
   }
-  .letterBig{font-size:clamp(82px,19vw,118px)}
-  .letterSmall{font-size:clamp(61px,15vw,86px)}
-  .wordLine{font-size:clamp(19px,4.8vw,26px);margin-top:5px}
+  .letterBig{font-size:clamp(86px,20vw,122px)}
+  .letterSmall{font-size:clamp(64px,16vw,90px)}
+  .wordLine{font-size:clamp(20px,5vw,27px);margin-top:5px}
   .numberCard{
-    width:min(340px,82vw);height:min(100%,185px);min-height:105px;border-radius:24px;
+    width:min(350px,84vw);height:min(100%,195px);min-height:115px;border-radius:25px;
   }
-  .numberMystery{font-size:clamp(82px,19vw,118px)}
+  .numberMystery{font-size:clamp(88px,20vw,122px)}
   .countBoard{
-    width:100%;height:100%;min-height:90px;max-height:none;
-    padding:8px !important;gap:3px !important;border-radius:20px;overflow:hidden;
+    width:100%;height:100%;min-height:100px;max-height:none;
+    padding:9px !important;gap:3px !important;border-radius:20px;overflow:hidden;
   }
-  .countItem{font-size:clamp(15px,4.7vw,34px) !important;line-height:1}
+  .countItem{font-size:clamp(16px,4.7vw,35px) !important;line-height:1}
 
   .choices{
-    width:100%;max-width:760px;margin:6px auto 0;
+    width:100%;max-width:760px;margin:7px auto 0;
     display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
   }
-  .choice{min-height:58px;border-radius:17px;font-size:clamp(28px,7vw,45px)}
-  .choice.imageChoice{min-height:66px;font-size:clamp(36px,8.5vw,52px)}
-  .choiceWord{font-size:12px;margin-top:2px}
-  .feedback{min-height:29px;font-size:clamp(15px,3.8vw,20px);line-height:1.15;margin-top:6px}
+  .choice{min-height:60px;border-radius:17px;font-size:clamp(29px,7vw,46px)}
+  .choice.imageChoice{min-height:72px;font-size:clamp(38px,8.7vw,54px)}
+  .choiceWord{font-size:12.5px;margin-top:2px}
+  .feedback{min-height:30px;font-size:clamp(15px,3.8vw,20px);line-height:1.15;margin-top:6px}
   .discoverActions{margin-top:6px;gap:6px;min-height:0}
-  .nextBig{min-height:43px;padding:8px 18px;font-size:15px}
+  .nextBig{min-height:44px;padding:8px 18px;font-size:15px}
 
   .reward{padding:12px}
-  .rewardEmoji{font-size:90px}
-  .reward h2{font-size:34px;margin:5px 0}
-  .reward p{font-size:16px;margin:7px 0}
+  .rewardEmoji{font-size:94px}
+  .reward h2{font-size:36px;margin:5px 0}
+  .reward p{font-size:17px;margin:7px 0}
 
   .settings{
     padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
@@ -152,90 +150,118 @@
   .settingsCard{max-height:100%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 }
 
+/* ---------- iPAD / TABLETTE PORTRAIT ---------- */
+@media (min-width:651px) and (max-width:1100px) and (orientation:portrait){
+  #home.active{grid-template-rows:minmax(130px,20%) minmax(0,1fr)}
+  .heroArt .bigMouse{font-size:115px}
+  .modeCard{padding:18px}
+  .modeIcon{font-size:50px}
+  .modeTitle{font-size:19px}
+  .modeDesc{font-size:14px}
+  .guide{grid-template-columns:92px minmax(0,1fr);padding:13px 15px}
+  .guideMouse{font-size:84px}
+  .bubble{font-size:17px;min-height:64px;max-height:88px}
+  .softBtn{font-size:14px;min-height:44px}
+  .stage{padding:15px;grid-template-rows:auto auto minmax(160px,1fr) auto auto auto}
+}
+
 /* ---------- iPAD / TABLETTE PAYSAGE ---------- */
 @media (min-width:700px) and (max-width:1100px) and (orientation:landscape){
-  #home.active{grid-template-rows:minmax(105px,20%) minmax(0,1fr)}
+  #home.active{grid-template-rows:minmax(110px,20%) minmax(0,1fr)}
   .modeGrid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
-  .modeCard{padding:14px}
-  .modeIcon{font-size:44px}
+  .modeCard{padding:15px}
+  .modeIcon{font-size:46px}
 
-  .gameShell{grid-template-columns:210px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:10px}
+  .gameShell{grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:10px}
   .guide{height:100%;display:flex;flex-direction:column;text-align:center;padding:14px}
-  .guideMouse{font-size:90px}
-  .bubble{width:100%;min-height:80px;max-height:130px;font-size:16px;-webkit-line-clamp:6;padding:13px}
+  .guideMouse{font-size:96px}
+  .bubble{width:100%;min-height:84px;max-height:140px;font-size:16.5px;-webkit-line-clamp:6;padding:13px}
   .guideControls{margin-top:auto;width:100%;grid-template-columns:1fr;gap:8px}
-  .softBtn{font-size:14px;min-height:42px}
-  .stage{height:100%;padding:14px;grid-template-rows:auto auto minmax(120px,1fr) auto auto auto}
+  .softBtn{font-size:14px;min-height:43px}
+  .stage{height:100%;padding:15px;grid-template-rows:auto auto minmax(130px,1fr) auto auto auto}
 }
 
 /* ---------- iPHONE PORTRAIT ---------- */
 @media (max-width:650px){
-  .topbar{min-height:50px;gap:6px;padding-top:max(6px,env(safe-area-inset-top));padding-bottom:6px}
-  .brand{gap:5px;font-size:16px;white-space:nowrap}
-  .brand .mouse{font-size:30px}
-  .stats{gap:4px}
-  .pill{padding:5px 7px;font-size:12px}
+  .topbar{min-height:51px;gap:5px;padding-top:max(6px,env(safe-area-inset-top));padding-bottom:6px}
+  .brand{gap:5px;font-size:15.5px;white-space:nowrap}
+  .brand .mouse{font-size:31px}
+  .stats{gap:3px}
+  .pill{padding:5px 7px;font-size:11.5px}
   .iconBtn{width:34px;height:34px;font-size:17px}
-  .progressWrap{height:4px}
+  .progressWrap{height:5px}
   main{padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
 
-  #home.active{grid-template-rows:minmax(105px,19%) minmax(0,1fr);gap:7px}
-  .hero{grid-template-columns:minmax(0,1fr) 100px;gap:8px}
-  .hero h1{font-size:clamp(25px,7vw,31px);margin-bottom:4px}
-  .hero p{font-size:12.5px;-webkit-line-clamp:2}
-  .heroArt{border-radius:18px}
-  .heroArt .bigMouse{font-size:72px}
+  #home.active{grid-template-rows:112px minmax(0,1fr);gap:7px}
+  .hero{grid-template-columns:minmax(0,1fr) 105px;gap:8px}
+  .hero h1{font-size:clamp(25px,7vw,30px);margin-bottom:4px}
+  .hero p{font-size:12.5px;line-height:1.18;-webkit-line-clamp:2}
+  .heroArt{border-radius:19px}
+  .heroArt .bigMouse{font-size:82px}
+
+  /* Sur téléphone, les tuiles utilisent la largeur : grosse icône à gauche,
+     texte à droite. Cela évite les grandes cartes vides vues sur iPhone. */
   .modeGrid{gap:7px}
-  .modeCard{padding:10px;border-radius:17px}
-  .modeIcon{font-size:34px;margin-bottom:4px}
-  .modeTitle{font-size:14px}
-  .modeDesc{font-size:10.5px;-webkit-line-clamp:2}
+  .modeCard{
+    padding:10px 11px;border-radius:18px;
+    display:grid;grid-template-columns:50px minmax(0,1fr);grid-template-rows:auto auto;
+    column-gap:8px;row-gap:4px;align-content:center;text-align:left;
+  }
+  .modeIcon{grid-row:1/3;align-self:center;font-size:44px;margin:0;line-height:1}
+  .modeTitle{font-size:15px;line-height:1.08;align-self:end}
+  .modeDesc{font-size:11px;line-height:1.16;margin:0;-webkit-line-clamp:3;align-self:start}
 
   .gameShell{gap:6px}
-  .guide{grid-template-columns:68px minmax(0,1fr);padding:8px 9px;gap:6px 9px;border-radius:18px}
+  .guide{grid-template-columns:68px minmax(0,1fr);padding:8px 9px;gap:6px 9px;border-radius:19px}
   .guideMouse{font-size:62px}
-  .bubble{padding:9px 10px;font-size:14.5px;min-height:50px;max-height:64px;-webkit-line-clamp:3}
+  .bubble{padding:9px 11px;font-size:15px;min-height:52px;max-height:66px;-webkit-line-clamp:3}
   .guideControls{gap:5px}
-  .softBtn{min-height:37px;padding:6px 4px;font-size:11.5px}
+  .softBtn{min-height:38px;padding:6px 4px;font-size:11.5px}
 
-  .stage{padding:8px;border-radius:18px;grid-template-rows:auto auto minmax(85px,1fr) auto auto auto}
-  .question{font-size:clamp(21px,5.8vw,27px);margin:0 0 3px}
-  .subQuestion{font-size:11.5px;margin-bottom:2px}
-  .illustration{width:min(320px,88vw);height:min(100%,170px)}
-  .letterCard{width:min(330px,88vw);height:min(100%,175px)}
-  .numberCard{width:min(320px,88vw);height:min(100%,165px)}
-  .choices{gap:5px;margin-top:5px}
-  .choice{min-height:54px;border-radius:14px;font-size:clamp(26px,8vw,39px)}
-  .choice.imageChoice{min-height:62px;font-size:clamp(32px,9vw,44px)}
-  .feedback{min-height:25px;font-size:14px;margin-top:4px}
+  .stage{padding:9px;border-radius:19px;grid-template-rows:auto auto minmax(110px,1fr) auto auto auto}
+  .question{font-size:clamp(22px,6vw,28px);margin:0 0 3px}
+  .subQuestion{font-size:12px;margin-bottom:2px}
+  .illustration{width:min(330px,88vw);height:min(100%,185px)}
+  .letterCard{width:min(340px,88vw);height:min(100%,190px)}
+  .numberCard{width:min(330px,88vw);height:min(100%,180px)}
+  .choices{gap:6px;margin-top:5px}
+  .choice{min-height:58px;border-radius:15px;font-size:clamp(27px,8vw,40px)}
+  .choice.imageChoice{min-height:70px;font-size:clamp(35px,9vw,46px)}
+  .feedback{min-height:26px;font-size:14px;margin-top:4px}
   .discoverActions{margin-top:4px}
-  .nextBig{min-height:39px;padding:6px 14px;font-size:13px}
+  .nextBig{min-height:40px;padding:7px 14px;font-size:13px}
 }
 
-/* iPhone de petite hauteur : on enlève le secondaire, mais Lila reste grande. */
-@media (max-width:650px) and (max-height:740px){
-  .brand span:last-child{display:none}
-  #home.active{grid-template-rows:88px minmax(0,1fr)}
-  .hero{grid-template-columns:minmax(0,1fr) 78px}
-  .hero h1{font-size:24px}
-  .hero p{display:none}
-  .heroArt .bigMouse{font-size:59px}
-  .modeDesc{display:none}
+/* Petits iPhone : on retire d'abord le texte secondaire, jamais Lila. */
+@media (max-width:650px) and (max-height:720px){
+  .topbar{min-height:46px;padding-top:max(4px,env(safe-area-inset-top));padding-bottom:4px}
+  .brand{font-size:14px}.brand .mouse{font-size:28px}
+  .pill{padding:4px 6px;font-size:10.5px}.iconBtn{width:31px;height:31px;font-size:15px}
+  #home.active{grid-template-rows:86px minmax(0,1fr)}
+  .hero{grid-template-columns:minmax(0,1fr) 82px}
+  .hero h1{font-size:23px}.hero p{display:none}.heroArt .bigMouse{font-size:64px}
+  .modeCard{grid-template-columns:43px minmax(0,1fr);padding:8px}
+  .modeIcon{font-size:38px}.modeTitle{font-size:13.5px}.modeDesc{display:none}
 
   .guide{grid-template-columns:58px minmax(0,1fr);padding:6px 8px;gap:4px 8px}
-  .guideMouse{display:block;font-size:53px}
-  .bubble{font-size:13px;min-height:42px;max-height:50px;padding:7px 9px;-webkit-line-clamp:2}
+  .guideMouse{font-size:54px}
+  .bubble{font-size:13.5px;min-height:44px;max-height:52px;padding:7px 9px;-webkit-line-clamp:2}
   .softBtn{min-height:33px;font-size:10.5px;padding:4px}
   .subQuestion{display:none}
-  .stage{grid-template-rows:auto minmax(78px,1fr) auto auto auto}
+  .stage{padding:7px;grid-template-rows:auto minmax(90px,1fr) auto auto auto}
   .visualWrap{grid-row:2}
   .choices{grid-row:3}
   .feedback{grid-row:4;font-size:12.5px;min-height:20px}
   .discoverActions{grid-row:5}
-  .illustration,.letterCard{height:min(100%,140px)}
-  .numberCard{height:min(100%,130px)}
-  .choice{min-height:47px}
-  .choice.imageChoice{min-height:53px}
+  .illustration,.letterCard{height:min(100%,150px)}
+  .numberCard{height:min(100%,140px)}
+  .choice{min-height:49px}.choice.imageChoice{min-height:57px}
+}
+
+@media (max-width:360px){
+  .brand span:last-child{display:none}
+  .modeCard{grid-template-columns:40px minmax(0,1fr);column-gap:6px}
+  .modeIcon{font-size:36px}
 }
 
 /* ---------- TÉLÉPHONE PAYSAGE ---------- */
@@ -247,18 +273,16 @@
   .iconBtn{width:30px;height:30px;font-size:14px}
   main{padding-top:4px;padding-bottom:max(4px,env(safe-area-inset-bottom))}
 
-  #home.active{grid-template-rows:62px minmax(0,1fr)}
-  .hero{grid-template-columns:minmax(0,1fr) 80px}
-  .hero h1{font-size:22px}
-  .hero p{display:none}
-  .heroArt .bigMouse{font-size:50px}
+  #home.active{grid-template-rows:65px minmax(0,1fr)}
+  .hero{grid-template-columns:minmax(0,1fr) 82px}
+  .hero h1{font-size:22px}.hero p{display:none}.heroArt .bigMouse{font-size:52px}
   .modeGrid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px}
-  .modeDesc{display:none}
+  .modeCard{display:flex;padding:8px}.modeIcon{font-size:32px;margin-bottom:3px}.modeTitle{font-size:13px}.modeDesc{display:none}
 
-  .gameShell{grid-template-columns:150px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:6px}
+  .gameShell{grid-template-columns:155px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:6px}
   .guide{height:100%;display:flex;flex-direction:column;padding:7px;text-align:center}
-  .guideMouse{display:block;font-size:58px}
-  .bubble{display:-webkit-box;width:100%;font-size:12px;min-height:46px;max-height:62px;-webkit-line-clamp:3;padding:7px}
+  .guideMouse{display:block;font-size:60px}
+  .bubble{display:-webkit-box;width:100%;font-size:12px;min-height:47px;max-height:64px;-webkit-line-clamp:3;padding:7px}
   .guideControls{margin-top:auto;width:100%;grid-template-columns:1fr;gap:4px}
   .softBtn{min-height:30px;font-size:10px;padding:3px}
 
