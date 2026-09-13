@@ -33,7 +33,31 @@ export const COUNT_EMOJIS = [
  {emoji:"🌼",name:"fleurs"},{emoji:"🦋",name:"papillons"}
 ];
 
-export const NUMBER_WORDS = {
-  1:"un",2:"deux",3:"trois",4:"quatre",5:"cinq",6:"six",7:"sept",8:"huit",9:"neuf",10:"dix",
-  11:"onze",12:"douze",13:"treize",14:"quatorze",15:"quinze",16:"seize",17:"dix-sept",18:"dix-huit",19:"dix-neuf",20:"vingt"
-};
+export function numberToFrench(value){
+  const n=Number(value);
+  const small={0:"zéro",1:"un",2:"deux",3:"trois",4:"quatre",5:"cinq",6:"six",7:"sept",8:"huit",9:"neuf",10:"dix",11:"onze",12:"douze",13:"treize",14:"quatorze",15:"quinze",16:"seize"};
+  if(n in small)return small[n];
+  if(n<20)return `dix-${small[n-10]}`;
+  if(n===100)return "cent";
+  if(n<70){
+    const tensNames={2:"vingt",3:"trente",4:"quarante",5:"cinquante",6:"soixante"};
+    const tens=Math.floor(n/10),unit=n%10,base=tensNames[tens];
+    if(unit===0)return base;
+    if(unit===1)return `${base} et un`;
+    return `${base}-${small[unit]}`;
+  }
+  if(n<80){
+    if(n===71)return "soixante et onze";
+    return n===70?"soixante-dix":`soixante-${numberToFrench(n-60)}`;
+  }
+  if(n===80)return "quatre-vingts";
+  if(n<100){
+    const rest=n-80;
+    return rest===0?"quatre-vingts":`quatre-vingt-${numberToFrench(rest)}`;
+  }
+  return String(n);
+}
+
+export const NUMBER_WORDS = Object.fromEntries(
+  Array.from({length:100},(_,i)=>[i+1,numberToFrench(i+1)])
+);
